@@ -1,159 +1,232 @@
-# WorkMatrix FrontEnd
+# WorkMatrix Front-End
 
-WorkMatrix FrontEnd is a modern, cross-platform web dashboard for the WorkMatrix employee monitoring system. It provides real-time insights, activity visualization, and management tools for both employees and administrators, integrating seamlessly with the WorkMatrix Background App and Supabase backend.
+The front-end application for WorkMatrix, built with Next.js 13 and Supabase.
 
----
+## Tech Stack
 
-## 🚀 Features
+- **Framework**: [Next.js 13](https://nextjs.org/) with App Router
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Authentication**: [Supabase Auth](https://supabase.com/auth)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **State Management**: [TanStack Query](https://tanstack.com/query) & Context API
+- **Forms**: [React Hook Form](https://react-hook-form.com/)
+- **Validation**: [Zod](https://zod.dev/)
+- **Icons**: [Lucide Icons](https://lucide.dev/)
 
-- **User Authentication:** Secure login for employees and admins (Supabase Auth).
-- **Role-Based Dashboards:** Separate views and permissions for employees and admins.
-- **Activity Visualization:** Charts and tables for screenshots, app usage, and productivity.
-- **Approval Workflows:** Admins can review and approve requests.
-- **Responsive UI:** Built with Next.js, Tailwind CSS, and React for desktop and mobile.
-- **API Integration:** Connects to Supabase for real-time data and actions.
-- **Extensible:** Modular components for easy feature addition.
-
----
-
-## 🗂️ Directory Structure
+## Project Structure
 
 ```
-Front-End/
-├── app/                # Next.js app directory (pages, layouts, routes)
-├── components/         # Reusable React components
-├── contexts/           # React context providers (e.g., Auth)
-├── hooks/              # Custom React hooks
-├── lib/                # Utility libraries (e.g., Supabase client)
-├── public/             # Static assets (images, icons)
-├── services/           # API and business logic
-├── styles/             # Global and component styles
-├── types/              # TypeScript types and interfaces
-├── .env.example        # Example environment variables
-├── .gitignore          # Git ignore rules
-├── next.config.mjs     # Next.js configuration
-├── package.json        # NPM dependencies and scripts
-├── postcss.config.mjs  # PostCSS configuration
-├── tailwind.config.ts  # Tailwind CSS configuration
-├── tsconfig.json       # TypeScript configuration
-└── README.md           # This file
+src/
+├── app/                    # Next.js 13 app directory
+│   ├── (auth)/            # Authentication routes
+│   ├── (dashboard)/       # Dashboard routes
+│   ├── (marketing)/       # Marketing pages
+│   └── api/               # API routes
+├── components/            # Reusable components
+│   ├── ui/               # UI components
+│   ├── dashboard/        # Dashboard components
+│   └── auth/             # Auth components
+├── config/               # Configuration files
+├── contexts/            # React Context providers
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility functions
+│   ├── api/            # API utilities
+│   ├── services/       # Service integrations
+│   └── utils/          # Helper functions
+├── public/              # Static assets
+├── styles/             # Global styles
+├── types/              # TypeScript types
+└── supabase/           # Supabase configurations
 ```
 
----
+## Getting Started
 
-## ⚙️ Setup & Installation
+### Prerequisites
 
-### 1. **Clone the Repository**
+- Node.js 18.x or higher
+- pnpm (recommended) or npm
+- Supabase project
 
+### Development Setup
+
+1. Install dependencies:
 ```bash
-git clone https://github.com/QuantumBreakz/WorkMatrix-FrontEnd.git
-cd WorkMatrix-FrontEnd
+pnpm install
 ```
 
-### 2. **Install Dependencies**
-
-```bash
-npm install
-# or
-yarn install
-```
-
-### 3. **Configure Environment Variables**
-
-Copy the example file and fill in your Supabase credentials:
+2. Set up environment variables:
 ```bash
 cp .env.example .env.local
 ```
-Edit `.env.local`:
-```
+
+Required environment variables:
+```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### 4. **Run the Development Server**
+3. Run the development server:
+```bash
+pnpm dev
+```
+
+4. Open [http://localhost:3000](http://localhost:3000)
+
+### Building for Production
 
 ```bash
-npm run dev
-# or
-yarn dev
+pnpm build
+pnpm start
 ```
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+## Features
 
-## 🛠️ Scripts
+### Authentication
+- Email/Password authentication
+- OAuth providers (Google, GitHub)
+- Role-based access control
+- Protected routes
+- Session management
 
-| Command           | Description                       |
-|-------------------|-----------------------------------|
-| `npm run dev`     | Start development server          |
-| `npm run build`   | Build for production              |
-| `npm start`       | Start production server           |
-| `npm run lint`    | Run ESLint                        |
-| `npm run format`  | Format code with Prettier         |
+### Dashboard
+- Employee monitoring
+- Time tracking
+- Screenshot capture
+- Activity analytics
+- Team management
+- Project tracking
 
----
+### Admin Features
+- User management
+- Team analytics
+- Activity monitoring
+- System settings
+- Report generation
 
-## 🧑‍💻 Usage
+## Development Guidelines
 
-- **Login:** Employees and admins log in with their Supabase credentials.
-- **Dashboard:** Employees see their own activity, screenshots, and app usage. Admins see all users (if permitted by RLS).
-- **Requests:** Admins can approve or reject employee requests.
-- **Settings:** Users can update their profile and preferences.
+### Code Style
 
----
+We use ESLint and Prettier for code formatting. Configuration files are included in the repository.
 
-## 🔒 Security & Privacy
+```bash
+# Run linter
+pnpm lint
 
-- **No raw media is stored in the frontend.** Only summary data and metadata are displayed.
-- **Role-based access:** Enforced via Supabase RLS and frontend logic.
-- **Environment variables:** Never commit secrets; use `.env.local` for local development.
+# Format code
+pnpm format
+```
 
----
+### Component Guidelines
 
-## 🧩 Extending the Frontend
+1. Use TypeScript for all new components
+2. Follow the component structure:
+```tsx
+// components/Example.tsx
+interface ExampleProps {
+  // Props interface
+}
 
-- **Add new pages:** Create files in `app/` for new routes.
-- **Add new components:** Place reusable UI in `components/`.
-- **API integration:** Use `lib/supabase.ts` for all Supabase queries.
-- **Type safety:** Use TypeScript types from `types/`.
+export function Example({ prop1, prop2 }: ExampleProps) {
+  // Component logic
+  return (
+    // JSX
+  )
+}
+```
 
----
+3. Use shadcn/ui components when possible
+4. Implement proper error boundaries
+5. Add proper TypeScript types
 
-## 🐞 Troubleshooting
+### State Management
 
-- **Blank page or errors:** Check the browser console and terminal output.
-- **Auth issues:** Ensure Supabase credentials are correct and RLS policies are set.
-- **API errors:** Check Supabase logs and network requests.
-- **Styling issues:** Run `npm run lint` and `npm run format`.
+- Use React Query for server state
+- Use Context for global UI state
+- Use local state for component-specific state
 
----
+### Testing
 
-## 📦 Deployment
+```bash
+# Run tests
+pnpm test
 
-- **Vercel:** Recommended for Next.js. Connect your repo and set environment variables.
-- **Other platforms:** Any Node.js-compatible host will work.
+# Run tests with coverage
+pnpm test:coverage
+```
 
----
+## API Integration
 
-## 🤝 Contributing
+### Supabase
 
-1. Fork the repo and create your feature branch (`git checkout -b feature/YourFeature`)
-2. Commit your changes (`git commit -am 'Add new feature'`)
-3. Push to the branch (`git push origin feature/YourFeature`)
-4. Open a pull request
+We use Supabase for:
+- Authentication
+- Database
+- Real-time subscriptions
+- Storage
 
----
+Example usage:
+```typescript
+import { supabase } from '@/lib/supabase'
 
-## 📄 License
+// Query data
+const { data, error } = await supabase
+  .from('table')
+  .select('*')
+  .eq('column', 'value')
+```
 
-MIT License. See [LICENSE](LICENSE) for details.
+### Background Service Integration
 
----
+Communication with the background service happens through:
+- WebSocket connections
+- REST API endpoints
+- File system operations
 
-## 🙋 Support
+## Deployment
 
-For questions or support, open an issue or contact the maintainer.
+### Production Deployment
 
----
+1. Build the application:
+```bash
+pnpm build
+```
 
-**Repository:** [QuantumBreakz/WorkMatrix-FrontEnd](https://github.com/QuantumBreakz/WorkMatrix-FrontEnd) 
+2. Set up environment variables on your hosting platform
+
+3. Deploy the application:
+```bash
+pnpm deploy
+```
+
+### Continuous Integration
+
+We use GitHub Actions for CI/CD. Workflows are defined in `.github/workflows/`.
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Build Errors**
+   - Clear `.next` directory
+   - Remove `node_modules` and reinstall
+   - Check TypeScript errors
+
+2. **Runtime Errors**
+   - Check environment variables
+   - Verify Supabase connection
+   - Check console for errors
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details. 

@@ -1,73 +1,162 @@
 # WorkMatrix
 
-A modern employee monitoring and time tracking solution built with Next.js 13, Supabase, and Tailwind CSS.
+<div align="center">
+  <img src="Front-End/public/Logo.png" alt="WorkMatrix Logo" width="200"/>
+  <h3>Modern Employee Monitoring & Time Tracking Solution</h3>
+  <p>Built with Next.js 13, Supabase, and Python</p>
+</div>
+
+<div align="center">
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#documentation">Documentation</a> •
+  <a href="#contributing">Contributing</a>
+</div>
+
+## Overview
+
+WorkMatrix is a comprehensive employee monitoring and time tracking solution designed for modern workplaces. It combines a powerful Next.js frontend with a Python-based background monitoring service, all backed by Supabase for real-time data synchronization.
 
 ## Features
 
-- 🔐 Secure Authentication with Supabase
-- 👥 Role-based Access Control (Admin/Employee)
-- ⏱️ Time Tracking
-- 📊 Activity Monitoring
-- 📸 Screenshot Capture
-- 📈 Productivity Analytics
-- 📱 Responsive Design
-- 🎨 Modern UI with Tailwind CSS
+### Employee Features
+- 🔐 **Secure Authentication** - Multi-factor authentication with role-based access control
+- ⏱️ **Time Tracking** - Automated time tracking with manual adjustments
+- 📸 **Screenshot Monitoring** - Configurable screenshot capture with privacy controls
+- 📊 **Activity Monitoring** - Application and productivity tracking
+- 📈 **Personal Analytics** - Individual performance and time allocation insights
+- 🎯 **Task Management** - Personal task tracking and progress monitoring
 
-## Tech Stack
+### Admin Features
+- 👥 **Team Management** - Comprehensive employee oversight and team organization
+- 📊 **Analytics Dashboard** - Real-time productivity metrics and team performance
+- 🔍 **Activity Review** - Detailed employee activity monitoring and analysis
+- 📅 **Attendance Management** - Time-off tracking and schedule management
+- ⚙️ **Customizable Settings** - Flexible monitoring rules and company policies
+- 📱 **Cross-platform Support** - Works on Windows, macOS, and Linux
 
-- **Frontend**: Next.js 13 (App Router), React, TypeScript
-- **Styling**: Tailwind CSS, Shadcn UI
-- **Backend**: Supabase
+## Architecture
+
+The project consists of two main components:
+
+### Front-End (Next.js Application)
+- **Framework**: Next.js 13 (App Router)
 - **Authentication**: Supabase Auth
-- **Database**: PostgreSQL (via Supabase)
-- **State Management**: React Query, Context API
-- **Icons**: Lucide Icons
+- **State Management**: React Query & Context API
+- **Styling**: Tailwind CSS & shadcn/ui
+- **Real-time Updates**: Supabase Realtime
 
-## Getting Started
+### Background-App (Python Service)
+- **Language**: Python 3.9+
+- **Monitoring**: System-level activity tracking
+- **Storage**: Local SQLite with Supabase sync
+- **Deployment**: Systemd/Windows Service
+- **Security**: End-to-end encryption
 
+## Installation
+
+### Prerequisites
+- Node.js 18.x or higher
+- Python 3.9 or higher
+- Supabase account
+- Git
+
+### Front-End Setup
 1. Clone the repository:
 ```bash
 git clone https://github.com/QuantumBreakz/WorkMatrix.git
+cd WorkMatrix/Front-End
 ```
 
 2. Install dependencies:
 ```bash
-cd WorkMatrix/Front-End
 npm install
+# or
+pnpm install
 ```
 
-3. Set up environment variables:
-Create a `.env.local` file in the Front-End directory with the following variables:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+3. Configure environment variables:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
 ```
 
-4. Run the development server:
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
-
+### Background Service Setup
+1. Navigate to the Background-App directory:
+```bash
+cd ../Background-App
 ```
-Front-End/
-├── app/                    # Next.js 13 app directory
-├── components/            # Reusable components
-├── config/               # Configuration files
-├── contexts/            # React Context providers
-├── hooks/               # Custom React hooks
-├── lib/                 # Utility functions and libraries
-├── public/              # Static assets
-└── styles/              # Global styles
+
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Configure the service:
+```bash
+cp config.example.py config.py
+# Edit config.py with your settings
+```
+
+5. Run the service:
+```bash
+python src/main.py
+```
+
+## Documentation
+
+Detailed documentation is available in the following sections:
+
+- [Front-End Documentation](Front-End/README.md)
+- [Background Service Documentation](Background-App/README.md)
+- [API Documentation](docs/API.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Security Considerations](docs/SECURITY.md)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+### Code Style
+- Front-End: ESLint & Prettier
+- Background-App: Black & isort
+- Commit messages: Conventional Commits
+
+## Security
+
+For security concerns, please email [security@workmatrix.com](mailto:security@workmatrix.com).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- 📧 Email: support@workmatrix.com
+- 💬 Discord: [Join our community](https://discord.gg/workmatrix)
+- 📚 Documentation: [docs.workmatrix.com](https://docs.workmatrix.com)
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.io/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Tailwind CSS](https://tailwindcss.com/) 
