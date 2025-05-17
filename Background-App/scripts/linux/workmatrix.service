@@ -1,0 +1,15 @@
+[Unit]
+Description=WorkMatrix Background Service
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/home/%i/workmatrix
+ExecStart=/home/%i/workmatrix/start_workmatrix.sh
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target 

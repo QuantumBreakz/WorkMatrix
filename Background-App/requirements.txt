@@ -1,0 +1,35 @@
+# Supabase and Database
+supabase-py==2.3.1
+python-dotenv==1.0.1
+asyncpg==0.29.0
+
+# System Monitoring
+psutil==5.9.8
+pyautogui==0.9.54
+Pillow==10.2.0
+opencv-python==4.9.0.80
+numpy==1.26.4
+pygetwindow==0.0.9
+keyboard==0.13.5
+mouse==0.7.1
+
+# Screenshot and Recording
+mss==9.0.1
+pynput==1.7.6
+
+# Async Support
+aiohttp==3.9.3
+asyncio==3.4.3
+
+# Utilities
+python-dateutil==2.8.2
+requests==2.31.0
+websockets==12.0
+
+# Logging
+loguru==0.7.2
+
+# Testing
+pytest==8.0.2
+pytest-cov==4.1.0
+pytest-asyncio==0.23.5 
