@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react"
 
 export function Skeleton({
   className,
@@ -76,4 +77,19 @@ export function ProfileSkeleton() {
       </div>
     </div>
   );
+}
+
+export function Loading() {
+  return (
+    <div className="flex min-h-[400px] w-full items-center justify-center">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+export function LoadingSpinner() {
+  return <Loader2 className="h-4 w-4 animate-spin" />
 } 

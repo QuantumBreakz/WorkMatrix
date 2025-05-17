@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,6 +28,7 @@ export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -41,10 +42,7 @@ export default function SignInForm() {
     try {
       setIsLoading(true);
       await signIn(values.email, values.password);
-      
-      // Get the redirect URL from query parameters or default to dashboard
-      const redirectTo = router.query.redirectTo as string || '/dashboard';
-      router.push(redirectTo);
+      // Redirect is handled in the auth context based on user role
     } catch (error) {
       // Error handling is done in AuthContext
       setIsLoading(false);

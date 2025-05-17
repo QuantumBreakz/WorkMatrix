@@ -173,60 +173,119 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          time_entry_id: string | null
           app_name: string
           window_title: string | null
           activity_type: string
-          keystroke_count: number
-          mouse_events: number
-          idle_time: number
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          time_entry_id?: string
           app_name: string
-          window_title?: string
+          window_title?: string | null
           activity_type: string
-          keystroke_count?: number
-          mouse_events?: number
-          idle_time?: number
           created_at?: string
+          updated_at?: string
         }
         Update: {
+          id?: string
           user_id?: string
-          time_entry_id?: string
           app_name?: string
-          window_title?: string
+          window_title?: string | null
           activity_type?: string
-          keystroke_count?: number
-          mouse_events?: number
-          idle_time?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      app_usage: {
+        Row: {
+          id: string
+          user_id: string
+          total_active_time: number
+          total_idle_time: number
+          last_active: string
+          mouse_movements: number
+          keyboard_events: number
+          scroll_events: number
+          network_requests: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          total_active_time?: number
+          total_idle_time?: number
+          last_active?: string
+          mouse_movements?: number
+          keyboard_events?: number
+          scroll_events?: number
+          network_requests?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          total_active_time?: number
+          total_idle_time?: number
+          last_active?: string
+          mouse_movements?: number
+          keyboard_events?: number
+          scroll_events?: number
+          network_requests?: number
+          created_at?: string
+          updated_at?: string
         }
       }
       screenshots: {
         Row: {
           id: string
           user_id: string
-          time_entry_id: string | null
-          storage_path: string
-          thumbnail_path: string | null
-          created_at: string
+          data: string
+          captured_at: string
+          uploaded_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          time_entry_id?: string
-          storage_path: string
-          thumbnail_path?: string
-          created_at?: string
+          data: string
+          captured_at: string
+          uploaded_at?: string
         }
         Update: {
+          id?: string
           user_id?: string
-          time_entry_id?: string
-          storage_path?: string
-          thumbnail_path?: string
+          data?: string
+          captured_at?: string
+          uploaded_at?: string
+        }
+      }
+      videos: {
+        Row: {
+          id: string
+          user_id: string
+          data: string
+          duration: number | null
+          captured_at: string
+          uploaded_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          data: string
+          duration?: number | null
+          captured_at: string
+          uploaded_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          data?: string
+          duration?: number | null
+          captured_at?: string
+          uploaded_at?: string
         }
       }
       leave_types: {
@@ -291,6 +350,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }

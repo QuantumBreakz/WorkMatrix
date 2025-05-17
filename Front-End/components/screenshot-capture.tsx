@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks"
 import { getSupabaseBrowser } from "@/lib/supabase"
 import { Camera } from "lucide-react"
 

@@ -1,5 +1,5 @@
 "use client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks";
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';

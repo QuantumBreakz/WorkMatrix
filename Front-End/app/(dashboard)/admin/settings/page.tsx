@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks"
 import { getSupabaseBrowser } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -193,6 +193,7 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false)
     }
+
   }
 
   if (loading) {

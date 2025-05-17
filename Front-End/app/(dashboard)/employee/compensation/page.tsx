@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks";
 import { getSupabaseBrowser } from "@/lib/supabase"; // Import Supabase client
 
 // Placeholder for DatePicker components if you don't have them yet

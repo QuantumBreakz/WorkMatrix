@@ -5,34 +5,66 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { getSupabaseBrowser } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export default function EmployeeLoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false)
+  const [isResendingEmail, setIsResendingEmail] = useState(false)
   const { signIn, signInWithGoogle } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const searchParams = useSearchParams()
   const redirectedFrom = searchParams.get("redirectedFrom")
 
+  const handleResendVerification = async () => {
+    setIsResendingEmail(true)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Verification email sent",
+        description: "Please check your email for the verification link.",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Failed to resend verification email",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      })
+    } finally {
+      setIsResendingEmail(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setShowVerificationAlert(false)
 
     try {
       await signIn(email, password)
       // Fetch user role from Supabase
-      const supabase = getSupabaseBrowser()
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -46,11 +78,20 @@ export default function EmployeeLoginPage() {
       }
     } catch (error: any) {
       console.error("Login error:", error)
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive",
-      })
+      if (error.message === "Email not confirmed") {
+        setShowVerificationAlert(true)
+        toast({
+          title: "Email not verified",
+          description: "Please check your email and verify your account before logging in.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials and try again",
+          variant: "destructive",
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -78,6 +119,23 @@ export default function EmployeeLoginPage() {
           <CardDescription>Enter your credentials to access your employee account</CardDescription>
         </CardHeader>
         <CardContent>
+          {showVerificationAlert && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex justify-between items-center">
+                <span>Please verify your email before logging in.</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={isResendingEmail}
+                >
+                  {isResendingEmail ? "Sending..." : "Resend verification"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="email" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="email">Email</TabsTrigger>

@@ -5,7 +5,7 @@ import React from "react"
 import { useState, useEffect, memo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

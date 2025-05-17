@@ -3,27 +3,53 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
-import { adminNavigation, employeeNavigation } from '@/config/navigation';
-import { LucideIcon } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { useAuth } from '@/hooks';
+import type { Database } from '@/types/supabase';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type UserRole = Profile['role'];
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon?: string;
+}
+
+interface NavSection {
+  name?: string;
+  items: NavItem[];
+}
+
+const adminNavigation: NavSection[] = [
+  {
+    items: [
+      { name: 'Dashboard', href: '/admin/dashboard' },
+      { name: 'Employees', href: '/admin/employees' },
+      { name: 'Reports', href: '/admin/reports' },
+      { name: 'Settings', href: '/admin/settings' },
+    ],
+  },
+];
+
+const employeeNavigation: NavSection[] = [
+  {
+    items: [
+      { name: 'Dashboard', href: '/employee/dashboard' },
+      { name: 'Time Tracking', href: '/employee/time' },
+      { name: 'Tasks', href: '/employee/tasks' },
+      { name: 'Reports', href: '/employee/reports' },
+    ],
+  },
+];
 
 interface MainNavProps extends React.HTMLAttributes<HTMLElement> {}
 
 export function MainNav({ className, ...props }: MainNavProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { userRole } = useAuth();
 
   // Get the appropriate navigation based on user role
-  const navigation = isAdmin ? adminNavigation : employeeNavigation;
-
-  // Helper function to get icon component
-  const getIcon = (iconName?: string) => {
-    if (!iconName) return null;
-    const Icon = Icons[iconName as keyof typeof Icons] as LucideIcon;
-    return Icon ? <Icon className="h-4 w-4 mr-2" /> : null;
-  };
+  const navigation = userRole === 'admin' ? adminNavigation : employeeNavigation;
 
   return (
     <nav
@@ -40,13 +66,12 @@ export function MainNav({ className, ...props }: MainNavProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center text-sm font-medium transition-colors hover:text-primary',
+                  'text-sm font-medium transition-colors hover:text-primary',
                   isActive
                     ? 'text-primary'
                     : 'text-muted-foreground'
                 )}
               >
-                {item.icon && getIcon(item.icon)}
                 {item.name}
               </Link>
             );

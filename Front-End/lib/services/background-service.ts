@@ -2,6 +2,20 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import html2canvas from 'html2canvas';
+import type { Database } from "@/types/supabase";
+
+// Extend Window interface to include electron property
+declare global {
+  interface Window {
+    electron?: {
+      onActivityUpdate: (callback: (data: ActivityMetrics) => void) => void
+      onScreenshotCapture: (callback: (screenshot: string) => void) => void
+      onVideoCapture: (callback: (video: string) => void) => void
+      startMonitoring: (config: { userId: string; config: Partial<CaptureConfig> }) => Promise<void>
+      stopMonitoring: () => void
+    }
+  }
+}
 
 export interface CaptureConfig {
   // Timing configurations
@@ -95,74 +109,56 @@ export class BackgroundService {
   private networkStatus: 'online' | 'offline' = 'online';
   private visibilityState: 'visible' | 'hidden' = 'visible';
   private retryCount: number = 0;
-  private supabase: SupabaseClient;
-  private currentUserId: string;
-  private backgroundApp: any; // Will be initialized with the background app instance
+  private supabase: SupabaseClient<Database>;
+  private currentUserId: string = '';
+  private backgroundApp: Window['electron'];
+  private wsConnection: WebSocket | null = null;
 
   private constructor() {
-    this.supabase = createClient(
+    this.supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     );
-    this.currentUserId = '';
     this.initializeUserId();
     this.setupActivityMonitoring();
     this.setupNetworkMonitoring();
     this.setupVisibilityMonitoring();
     this.startCleanupInterval();
     this.initializeBackgroundApp();
+    this.initializeWebSocket();
   }
 
   private async initializeUserId() {
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      this.currentUserId = user?.id || '';
-    } catch (error) {
-      console.error('Error getting user ID:', error);
-    }
+    const { data: { session } } = await this.supabase.auth.getSession();
+    this.currentUserId = session?.user?.id || '';
   }
 
   private setupActivityMonitoring() {
     if (typeof window !== 'undefined') {
       // Mouse movement monitoring
       if (this.config.monitorMouseMovement) {
-        window.addEventListener('mousemove', () => {
-          this.activityMetrics.mouseMovements++;
-          this.updateActivity();
-        });
+        window.addEventListener('mousemove', () => this.updateActivity());
       }
 
       // Keyboard activity monitoring
       if (this.config.monitorKeyboardActivity) {
-        window.addEventListener('keydown', () => {
-          this.activityMetrics.keyboardEvents++;
-          this.updateActivity();
-        });
+        window.addEventListener('keydown', () => this.updateActivity());
       }
 
       // Scroll activity monitoring
       if (this.config.monitorScrollActivity) {
-        window.addEventListener('scroll', () => {
-          this.activityMetrics.scrollEvents++;
-          this.updateActivity();
-        });
+        window.addEventListener('scroll', () => this.updateActivity());
       }
 
-      // Window focus monitoring
-      window.addEventListener('focus', () => {
-        if (this.config.captureOnFocus) {
+      // Tab visibility monitoring
+      if (this.config.monitorTabVisibility) {
+        document.addEventListener('visibilitychange', () => {
+          this.visibilityState = document.hidden ? 'hidden' : 'visible';
+          if (this.config.captureOnVisibilityChange) {
           this.updateActivity();
         }
       });
-
-      window.addEventListener('blur', () => {
-        if (this.config.captureOnBlur) {
-          this.handleBlur();
         }
-      });
-
-      // Check idle status periodically
-      setInterval(() => this.checkIdleStatus(), this.config.idleThreshold);
     }
   }
 
@@ -191,7 +187,7 @@ export class BackgroundService {
   private setupVisibilityMonitoring() {
     if (typeof window !== 'undefined' && this.config.monitorTabVisibility) {
       document.addEventListener('visibilitychange', () => {
-        this.visibilityState = document.visibilityState as 'visible' | 'hidden';
+        this.visibilityState = document.hidden ? 'hidden' : 'visible';
         if (this.config.captureOnVisibilityChange) {
           this.updateActivity();
         }
@@ -200,21 +196,122 @@ export class BackgroundService {
   }
 
   private startCleanupInterval() {
-    setInterval(() => this.cleanupStorage(), this.config.cleanupInterval);
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        this.cleanupStorage();
+      }, this.config.cleanupInterval);
+    }
   }
 
   private updateActivity() {
     const now = Date.now();
-    const timeSinceLastActive = now - this.lastActivity;
-    
-    if (timeSinceLastActive > this.config.idleThreshold) {
-      this.activityMetrics.idleTime += timeSinceLastActive;
+    const timeSinceLastActivity = now - this.lastActivity;
+
+    if (timeSinceLastActivity >= this.config.idleThreshold) {
+      if (!this.isIdle) {
+        this.isIdle = true;
+        this.activityMetrics.idleTime += timeSinceLastActivity;
+      }
     } else {
-      this.activityMetrics.totalActiveTime += timeSinceLastActive;
+      if (this.isIdle) {
+        this.isIdle = false;
+      }
+      this.activityMetrics.totalActiveTime += timeSinceLastActivity;
     }
     
     this.lastActivity = now;
-    this.isIdle = false;
+    this.activityMetrics.lastActive = now;
+
+    // Send activity update through WebSocket if connected
+    this.sendActivityUpdate();
+  }
+
+  private async initializeWebSocket() {
+    const maxRetries = 3;
+    let retryCount = 0;
+    const retryDelay = 5000; // 5 seconds
+    const wsUrl = process.env.NEXT_PUBLIC_BACKGROUND_APP_WS_URL || 'ws://localhost:8765';
+
+    const connectWebSocket = async () => {
+        try {
+            if (this.wsConnection?.readyState === WebSocket.OPEN) {
+                return; // Already connected
+            }
+
+            this.wsConnection = new WebSocket(wsUrl);
+
+            this.wsConnection.onopen = () => {
+                console.log('WebSocket connection established');
+                this.sendAuthMessage();
+                retryCount = 0; // Reset retry count on successful connection
+            };
+
+            this.wsConnection.onclose = async (event) => {
+                console.log('WebSocket connection closed:', event.code, event.reason);
+                if (!event.wasClean && retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`Retrying connection (${retryCount}/${maxRetries})...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    await connectWebSocket();
+                } else if (retryCount >= maxRetries) {
+                    console.error('Max retry attempts reached');
+                }
+            };
+
+            this.wsConnection.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            this.wsConnection.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    switch (data.type) {
+                        case 'activityUpdate':
+                            this.activityMetrics = {
+                                ...this.activityMetrics,
+                                ...data.data,
+                                lastActive: Date.now()
+                            };
+                            break;
+                        case 'error':
+                            console.error('WebSocket error message:', data.error);
+                            break;
+                        case 'pong':
+                            // Handle heartbeat response
+                            break;
+                        default:
+                            console.warn('Unknown message type:', data.type);
+                    }
+                } catch (error) {
+                    console.error('Error handling WebSocket message:', error);
+                }
+            };
+
+            // Set up heartbeat to keep connection alive
+            const heartbeat = setInterval(() => {
+                if (this.wsConnection?.readyState === WebSocket.OPEN) {
+                    this.wsConnection.send(JSON.stringify({
+                        type: 'ping',
+                        timestamp: new Date().toISOString()
+                    }));
+                } else {
+                    clearInterval(heartbeat);
+                }
+            }, 30000); // Send heartbeat every 30 seconds
+
+        } catch (error) {
+            console.error('Error initializing WebSocket:', error);
+            if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`Retrying connection (${retryCount}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                await connectWebSocket();
+            }
+        }
+    };
+
+    // Initial connection attempt
+    await connectWebSocket();
   }
 
   private handleBlur() {
@@ -679,5 +776,25 @@ export class BackgroundService {
 
   public getCapturingStatus(): boolean {
     return this.isCapturing;
+  }
+
+  private sendAuthMessage() {
+    if (this.wsConnection?.readyState === WebSocket.OPEN) {
+      this.wsConnection.send(JSON.stringify({
+        type: 'auth',
+        user_id: this.currentUserId,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+
+  private sendActivityUpdate() {
+    if (this.wsConnection?.readyState === WebSocket.OPEN) {
+      this.wsConnection.send(JSON.stringify({
+        type: 'activity_update',
+        data: this.activityMetrics,
+        timestamp: new Date().toISOString()
+      }))
+    }
   }
 } 

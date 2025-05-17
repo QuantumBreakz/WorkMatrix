@@ -7,26 +7,52 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
-import { adminNavigation, employeeNavigation } from '@/config/navigation';
-import * as Icons from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import { useAuth } from '@/hooks';
+import { Menu } from 'lucide-react';
+import type { Database } from '@/types/supabase';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type UserRole = Profile['role'];
+
+interface NavItem {
+  name: string;
+  href: string;
+}
+
+interface NavSection {
+  name?: string;
+  items: NavItem[];
+}
+
+const adminNavigation: NavSection[] = [
+  {
+    items: [
+      { name: 'Dashboard', href: '/admin/dashboard' },
+      { name: 'Employees', href: '/admin/employees' },
+      { name: 'Reports', href: '/admin/reports' },
+      { name: 'Settings', href: '/admin/settings' },
+    ],
+  },
+];
+
+const employeeNavigation: NavSection[] = [
+  {
+    items: [
+      { name: 'Dashboard', href: '/employee/dashboard' },
+      { name: 'Time Tracking', href: '/employee/time' },
+      { name: 'Tasks', href: '/employee/tasks' },
+      { name: 'Reports', href: '/employee/reports' },
+    ],
+  },
+];
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { userRole } = useAuth();
 
   // Get the appropriate navigation based on user role
-  const navigation = isAdmin ? adminNavigation : employeeNavigation;
-
-  // Helper function to get icon component
-  const getIcon = (iconName?: string) => {
-    if (!iconName) return null;
-    const Icon = Icons[iconName as keyof typeof Icons] as LucideIcon;
-    return Icon ? <Icon className="h-4 w-4 mr-2" /> : null;
-  };
+  const navigation = userRole === 'admin' ? adminNavigation : employeeNavigation;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -35,7 +61,7 @@ export function MobileNav() {
           variant="ghost"
           className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
         >
-          <Icons.Menu className="h-6 w-6" />
+          <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
@@ -65,7 +91,6 @@ export function MobileNav() {
                             : "text-muted-foreground"
                         )}
                       >
-                        {item.icon && getIcon(item.icon)}
                         {item.name}
                       </Link>
                     );

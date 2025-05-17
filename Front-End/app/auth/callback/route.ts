@@ -12,30 +12,23 @@ export async function GET(request: Request) {
     const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (session) {
-      // Check user role and redirect accordingly
-      const { data: employee } = await supabase
-        .from("employees")
+      // Check user role from profiles table
+      const { data: profile } = await supabase
+        .from("profiles")
         .select("role")
-        .eq("email", session.user.email)
+        .eq("id", session.user.id)
         .single()
 
-      if (employee) {
-        return NextResponse.redirect(new URL("/employee/dashboard", request.url))
-      }
-
-      const { data: admin } = await supabase
-        .from("admins")
-        .select("role")
-        .eq("email", session.user.email)
-        .eq("approved", true)
-        .single()
-
-      if (admin) {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+      if (profile) {
+        const redirectUrl = profile.role === 'admin' 
+          ? new URL("/admin/dashboard", request.url)
+          : new URL("/employee/dashboard", request.url)
+        
+        return NextResponse.redirect(redirectUrl)
       }
     }
   }
 
-  // Default redirect to dashboard if no specific role is found
-  return NextResponse.redirect(new URL("/dashboard", request.url))
+  // Default redirect to login if no valid session or profile
+  return NextResponse.redirect(new URL("/login", request.url))
 }

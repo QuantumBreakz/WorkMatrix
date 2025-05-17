@@ -18,9 +18,9 @@ export default function AuthLayout({
                 <Image
                   src="/logo.png"
                   alt="WorkMatrix Logo"
-                  width={40}
-                  height={40}
-                  className="rounded-lg"
+                  width={32}
+                  height={32}
+                  priority
                 />
                 <span className="text-2xl font-bold">WorkMatrix</span>
               </div>

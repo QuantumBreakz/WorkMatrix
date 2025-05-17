@@ -3,6 +3,7 @@ import AuthWrapper from '@/components/auth/AuthWrapper';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserNav } from '@/components/dashboard/user-nav';
 import { MainNav } from '@/components/dashboard/main-nav';
+import { MobileNav } from '@/components/dashboard/mobile-nav';
 import Image from 'next/image';
 
 export default function DashboardLayout({
@@ -22,13 +23,19 @@ export default function DashboardLayout({
                 alt="WorkMatrix Logo"
                 width={32}
                 height={32}
+                priority
                 className="rounded-lg"
               />
               <span className="hidden md:inline-block font-bold">
                 WorkMatrix
               </span>
             </div>
-            <MainNav className="mx-6" />
+            <div className="hidden md:block">
+              <MainNav className="mx-6" />
+            </div>
+            <div className="md:hidden">
+              <MobileNav />
+            </div>
             <div className="ml-auto flex items-center space-x-4">
               <ThemeToggle />
               <UserNav />

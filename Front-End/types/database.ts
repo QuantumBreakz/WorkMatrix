@@ -23,14 +23,27 @@ export type Employee = {
   updated_at: string
 }
 
-export type TimeLog = {
+export type TimeEntry = {
   id: string
   user_id: string
+  task_id?: string
   start_time: string
   end_time: string | null
-  duration_minutes: number | null
+  duration: number | null
+  status: string
+  created_at: string
+}
+
+export type ActivityLog = {
+  id: string
+  user_id: string
+  time_entry_id?: string
+  app_name: string
+  window_title?: string
   activity_type: string
-  notes: string | null
+  keystroke_count: number
+  mouse_events: number
+  idle_time: number
   created_at: string
 }
 

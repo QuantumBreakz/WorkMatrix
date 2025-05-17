@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks"
 import { useState } from "react"
 
 export default function NotFound() {

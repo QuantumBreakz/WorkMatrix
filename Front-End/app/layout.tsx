@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from 'sonner'
-import { AuthProvider } from "@/contexts/AuthContext"
+import { AuthProvider } from "@/hooks"
 import ClientProviders from "@/components/providers/client-providers"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
