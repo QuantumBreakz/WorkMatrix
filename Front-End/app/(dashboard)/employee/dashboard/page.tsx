@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import { Clock, Activity, Calendar as CalendarIcon, FileText, Briefcase, Target, Moon } from "lucide-react"
+import { Clock, Activity, Calendar as CalendarIcon, FileText, Briefcase, Target, Moon, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface ActivityLog {
@@ -20,6 +20,13 @@ interface LeaveBalance {
   leave_type: string
   total_allotted: number
   total_taken: number
+}
+
+interface UserProfile {
+  id: string;
+  full_name: string;
+  department: string;
+  role: string;
 }
 
 export default function EmployeeDashboard() {
@@ -39,6 +46,62 @@ export default function EmployeeDashboard() {
   const [isLoadingExtraStats, setIsLoadingExtraStats] = useState(true)
 
   const router = useRouter()
+
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  useEffect(() => {
+    const checkAuthAndLoadProfile = async () => {
+      try {
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+        
+        if (!session) {
+          router.push('/login');
+          return;
+        }
+
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, department, role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+
+        // Verify user role
+        if (profile.role !== 'employee') {
+          toast({
+            title: 'Access Denied',
+            description: 'You do not have permission to access this page.',
+            variant: 'destructive',
+          });
+          router.push('/login');
+          return;
+        }
+
+        setProfile(profile);
+      } catch (error: any) {
+        console.error('Dashboard error:', error);
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to load dashboard',
+          variant: 'destructive',
+        });
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthAndLoadProfile();
+  }, [router, toast]);
 
   useEffect(() => {
     if (user) {
@@ -152,12 +215,16 @@ export default function EmployeeDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
   
+  if (!profile) {
+    return null;
+  }
+
   const workedThisMonth = minutesToHoursAndMinutes(timeData.month)
   const monthlyTarget = targetMonthlyHours || 0
   const leavesAvailableText = leaveBalances.map(lb => 
@@ -168,14 +235,44 @@ export default function EmployeeDashboard() {
   ).join(", ") || "N/A"
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto py-8 space-y-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Welcome, {profile.full_name}!</CardTitle>
+          <CardDescription>Employee Dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Department</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{profile.department || 'Not assigned'}</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Role</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="capitalize">{profile.role}</p>
+              </CardContent>
+            </Card>
+            
+            {/* Add more dashboard cards/widgets here */}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Employee Dashboard</h1>
+        <h1 className="text-3xl font-bold">Employee Dashboard</h1>
         <Button onClick={() => { fetchDashboardData()
           fetchExtraStats()
         }} disabled={isLoading || isLoadingExtraStats}>
           { (isLoading || isLoadingExtraStats) ? "Refreshing..." : "Refresh"}
-          </Button>
+        </Button>
       </div>
 
       {/* Top Row: Time Tracking Overview & Monthly Work/Leave Status */}
@@ -190,29 +287,29 @@ export default function EmployeeDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{formatTime(timeData.today)}</div>
               <p className="text-xs text-muted-foreground">Total time tracked today</p>
-                        </CardContent>
-                      </Card>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">This Week</CardTitle>
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
+            </CardHeader>
+            <CardContent>
               <div className="text-2xl font-bold">{formatTime(timeData.week)}</div>
               <p className="text-xs text-muted-foreground">Total time this week</p>
-                        </CardContent>
-                      </Card>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">This Month</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
+            </CardHeader>
+            <CardContent>
               <div className="text-2xl font-bold">{formatTime(timeData.month)}</div>
               <p className="text-xs text-muted-foreground">Total time this month</p>
             </CardContent>
           </Card>
-      </div>
+        </div>
 
         {/* Monthly Work & Leave Status Card (col-span-1 on lg) */}
         <Card className="lg:col-span-1">
@@ -228,15 +325,15 @@ export default function EmployeeDashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Target Monthly Hours:</span>
                   <span className="text-sm font-semibold">{monthlyTarget} hrs</span>
-                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Hours Worked This Month:</span>
                   <span className="text-sm font-semibold">{workedThisMonth.hours}h {workedThisMonth.minutes}m</span>
-                    </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Total Leaves Allotted:</span>
                   <span className="text-sm font-semibold">{leavesAvailableText}</span>
-                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Leaves Remaining:</span>
                   <span className="text-sm font-semibold">{leavesRemainingText}</span>
@@ -258,7 +355,7 @@ export default function EmployeeDashboard() {
           <p className="text-muted-foreground">Calendar and detailed daily time view will be implemented here.</p>
           {/* Placeholder for calendar component and daily time list */}
         </CardContent>
-        </Card>
+      </Card>
 
       {/* Recent Activity & Quick Actions (existing sections) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
