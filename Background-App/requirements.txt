@@ -1,5 +1,5 @@
 # Supabase and Database
-supabase-py==2.3.1
+supabase>=1.0.3
 python-dotenv==1.0.1
 asyncpg==0.29.0
 
@@ -12,6 +12,9 @@ numpy==1.26.4
 pygetwindow==0.0.9
 keyboard==0.13.5
 mouse==0.7.1
+
+# Task Scheduling
+schedule==1.2.1
 
 # Screenshot and Recording
 mss==9.0.1
@@ -31,5 +34,5 @@ loguru==0.7.2
 
 # Testing
 pytest==8.0.2
-pytest-cov==4.1.0
+pytest-cov==4.1.0 
 pytest-asyncio==0.23.5 

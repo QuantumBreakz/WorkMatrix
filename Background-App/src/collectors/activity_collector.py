@@ -1,157 +1,196 @@
-import psutil
+import os
 import time
-from datetime import datetime
 import logging
-from pynput import mouse, keyboard
-from pathlib import Path
-from src.utils.database import LocalDatabase
-from src.utils.config import ACTIVITY_LOG_FILE
-import uuid
-import platform
-from utils.sqlite_manager import SQLiteManager
+import psutil
+import win32gui
+import win32process
+from datetime import datetime, timedelta
+from typing import Dict, Optional, List
+from ..utils.database import LocalDatabase
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/activity.log'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
-TERMINAL_APPS = {
-    "Windows": ["cmd.exe", "powershell.exe", "conhost.exe"],
-    "Linux": ["gnome-terminal", "xterm", "konsole", "bash", "zsh"]
-}
-
-def is_terminal_active():
-    try:
-        for proc in psutil.process_iter(['name']):
-            name = proc.info['name']
-            if name and name.lower() in TERMINAL_APPS.get(platform.system(), []):
-                if proc.status() == psutil.STATUS_RUNNING:
-                    return True
-    except Exception:
-        pass
-    return False
-
 class ActivityCollector:
-    def __init__(self, user_id):
+    def __init__(self, user_id: str, idle_threshold: int = 300):
         self.user_id = user_id
-        self.sqlite_db = SQLiteManager()
-        self.activity_data = None
-        self.mouse_events = 0
-        self.keystrokes = 0
+        self.db = LocalDatabase()
+        self.last_activity_time = time.time()
+        self.last_window_title = ""
+        self.last_app_name = ""
+        self.idle_threshold = idle_threshold  # seconds
         self.is_idle = False
-        self.is_break = False
-        self.last_activity = time.time()
-        self.idle_threshold = 300  # 5 minutes in seconds
-        self.current_keys = set()  # Track currently pressed keys
-        
-        # Initialize mouse listener
-        self.mouse_listener = mouse.Listener(
-            on_move=self._on_mouse_event,
-            on_click=self._on_mouse_event,
-            on_scroll=self._on_mouse_event
-        )
-        
-        # Initialize keyboard listener
-        self.keyboard_listener = keyboard.Listener(
-            on_press=self._on_key_press,
-            on_release=self._on_key_release
-        )
-        
-        # Start listeners
-        self.mouse_listener.start()
-        self.keyboard_listener.start()
+        self.idle_start_time = None
+        self.total_idle_time = 0
+        self.total_active_time = 0
+        logger.info(f"Activity collector initialized for user {user_id}")
 
-    def _on_mouse_event(self, *args):
-        """Track any mouse activity (move, click, scroll)."""
-        self.mouse_events += 1
-        self.last_activity = time.time()
-        self._check_idle()
+    def get_active_window_info(self) -> Dict[str, str]:
+        """Get information about the currently active window."""
+        try:
+            window = win32gui.GetForegroundWindow()
+            _, pid = win32process.GetWindowThreadProcessId(window)
+            process = psutil.Process(pid)
+            app_name = process.name()
+            window_title = win32gui.GetWindowText(window)
+            
+            # Get additional process info
+            cpu_percent = process.cpu_percent()
+            memory_info = process.memory_info()
 
-    def _on_key_press(self, key):
-        """Track key presses."""
-        self.keystrokes += 1
-        self.last_activity = time.time()
-        self._check_idle()
-        
-        # Add key to currently pressed keys
-        self.current_keys.add(key)
-        
-        # Check for break hotkey (Ctrl+Shift+B)
-        if hasattr(key, 'vk'):
-            if key.vk == keyboard.KeyCode.from_char('b').vk:
-                modifiers = keyboard.Key.ctrl_l in self.current_keys and \
-                           keyboard.Key.shift_l in self.current_keys
-                if modifiers:
-                    self.toggle_break()
+            return {
+                "app_name": app_name,
+                "window_title": window_title,
+                "process_id": pid,
+                "cpu_usage": cpu_percent,
+                "memory_usage": memory_info.rss,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Error getting active window info: {str(e)}")
+            return {
+                "app_name": "unknown",
+                "window_title": "unknown",
+                "process_id": None,
+                "cpu_usage": 0,
+                "memory_usage": 0,
+                "timestamp": datetime.utcnow().isoformat()
+            }
 
-    def _on_key_release(self, key):
-        """Track key releases."""
-        # Remove key from currently pressed keys
-        if key in self.current_keys:
-            self.current_keys.remove(key)
-
-    def _check_idle(self):
-        """Check if user is idle."""
+    def check_idle_state(self) -> bool:
+        """Check if the system is in an idle state."""
         current_time = time.time()
-        if current_time - self.last_activity > self.idle_threshold:
-            if not self.is_idle:
-                self.is_idle = True
-                logger.info("User is idle")
-        else:
-            if self.is_idle:
-                self.is_idle = False
-                logger.info("User is active")
+        idle_duration = current_time - self.last_activity_time
 
-    def toggle_break(self):
-        """Toggle break state."""
-        self.is_break = not self.is_break
-        logger.info(f"Break {'started' if self.is_break else 'ended'}")
+        if idle_duration >= self.idle_threshold and not self.is_idle:
+            # Transition to idle state
+            self.is_idle = True
+            self.idle_start_time = current_time
+            logger.info("System entered idle state")
+            return True
+        elif idle_duration < self.idle_threshold and self.is_idle:
+            # Transition from idle to active
+            self.is_idle = False
+            if self.idle_start_time:
+                self.total_idle_time += current_time - self.idle_start_time
+                self.idle_start_time = None
+            logger.info("System returned from idle state")
+            return False
+        
+        return self.is_idle
 
-    def collect_activity(self):
-        if is_terminal_active():
-            logger.info("Terminal is active, skipping app usage logging for this interval.")
-            current_keystrokes = self.keystrokes
-            current_mouse_events = self.mouse_events
-            self.keystrokes = 0
-            self.mouse_events = 0
+    def collect_activity(self) -> Optional[Dict]:
+        """Collect current activity data."""
+        try:
+            current_time = time.time()
+            window_info = self.get_active_window_info()
+            is_idle = self.check_idle_state()
+            
+            # Calculate time deltas
+            time_since_last = current_time - self.last_activity_time
+            if not is_idle:
+                self.total_active_time += time_since_last
+
+            # Only log if the window or app has changed, or if transitioning idle state
+            if (window_info["window_title"] != self.last_window_title or 
+                window_info["app_name"] != self.last_app_name or
+                is_idle != self.is_idle):
+                
+                activity_data = {
+                    "user_id": self.user_id,
+                    "app_name": window_info["app_name"],
+                    "window_title": window_info["window_title"],
+                    "activity_type": "window_focus" if not is_idle else "idle",
+                    "cpu_usage": window_info["cpu_usage"],
+                    "memory_usage": window_info["memory_usage"],
+                    "is_idle": is_idle,
+                    "idle_duration": time_since_last if is_idle else 0,
+                    "total_idle_time": self.total_idle_time,
+                    "total_active_time": self.total_active_time,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+
+                # Store in local database
+                self.db.insert_activity_log(activity_data)
+
+                # Update last known state
+                self.last_window_title = window_info["window_title"]
+                self.last_app_name = window_info["app_name"]
+                self.last_activity_time = current_time
+
+                return activity_data
+
+        except Exception as e:
+            logger.error(f"Error collecting activity: {str(e)}")
             return None
 
-        active_window_title = "Unknown"
+    def get_recent_activity(self, limit: int = 10) -> List[Dict]:
+        """Get recent activity logs."""
         try:
-            import pygetwindow as gw
-            win = gw.getActiveWindow()
-            if win and win.title:
-                active_window_title = win.title
-            else:
-                logger.debug("No active window found or window has no title.")
-        except ImportError:
-            logger.warning("pygetwindow not installed, cannot get active window title.")
+            return self.db.get_recent_activity_logs(limit)
         except Exception as e:
-            logger.error(f"Error getting active window title: {str(e)}")
+            logger.error(f"Error getting recent activity: {str(e)}")
+            return []
 
-        current_keystrokes = self.keystrokes
-        current_mouse_events = self.mouse_events
-        self.keystrokes = 0
-        self.mouse_events = 0
-
-        data = {
-            "id": str(uuid.uuid4()),
-            "user_id": self.user_id,
-            "app_name": active_window_title,
-            "window_title": active_window_title,
-            "duration": 60,
-            "keystroke_count": current_keystrokes,
-            "mouse_event_count": current_mouse_events,
-            "timestamp": datetime.utcnow().isoformat(),
-            "created_at": datetime.utcnow().isoformat()
-        }
+    def get_activity_summary(self, start_time: datetime, end_time: datetime) -> Dict:
+        """Get activity summary for a time period."""
         try:
-            self.sqlite_db.insert_record("app_usage", data)
-            logger.info(f"Locally stored activity: {current_keystrokes} keys, {current_mouse_events} mouse events for {active_window_title}")
-            self.activity_data = data
-            return data
-        except Exception as e:
-            logger.error(f"Failed to insert activity into local DB: {str(e)}")
-            return None
+            logs = self.db.get_activity_logs_between(start_time, end_time)
+            
+            # Calculate summary statistics
+            app_usage = {}
+            total_time = 0
+            last_time = None
+            last_app = None
 
-    def stop(self):
-        """Stop activity tracking."""
-        self.mouse_listener.stop()
-        self.keyboard_listener.stop() 
+            for log in logs:
+                current_time = datetime.fromisoformat(log["created_at"])
+                
+                if last_time and last_app:
+                    time_diff = (current_time - last_time).total_seconds()
+                    app_usage[last_app] = app_usage.get(last_app, 0) + time_diff
+                    total_time += time_diff
+
+                last_time = current_time
+                last_app = log["app_name"]
+
+            return {
+                "total_time": total_time,
+                "app_usage": app_usage,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat()
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting activity summary: {str(e)}")
+            return {
+                "total_time": 0,
+                "app_usage": {},
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat()
+            }
+
+    def cleanup_old_activity(self, days: int = 7) -> None:
+        """Clean up activity logs older than specified days."""
+        try:
+            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            self.db.delete_old_activity_logs(cutoff_date)
+            logger.info(f"Cleaned up activity logs older than {days} days")
+        except Exception as e:
+            logger.error(f"Error cleaning up old activity: {str(e)}")
+
+    def close(self) -> None:
+        """Close the database connection."""
+        try:
+            self.db.close()
+            logger.info("Activity collector closed")
+        except Exception as e:
+            logger.error(f"Error closing activity collector: {str(e)}") 

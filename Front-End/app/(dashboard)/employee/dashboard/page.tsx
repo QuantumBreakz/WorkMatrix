@@ -1,20 +1,23 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
-import { Clock, Activity, Calendar as CalendarIcon, FileText, Briefcase, Target, Moon, Loader2 } from "lucide-react"
+import { supabase } from "@/lib/supabase-client"
+import { Loader2, Clock, Activity, CheckSquare, BarChart2, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useWebSocket } from '@/lib/services/websocket-service'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { TimeTrackingCard } from '@/components/employee/TimeTrackingCard'
+import { ActivityFeed } from '@/components/employee/ActivityFeed'
+import { TaskList } from '@/components/employee/TaskList'
+import { WorkSummaryGrid } from '@/components/employee/WorkSummaryGrid'
+import type { Database } from '@/types/supabase'
 
-interface ActivityLog {
-  id: string
-  description: string
-  created_at: string
-  user_id: string
-}
+type Profile = Database['public']['Tables']['profiles']['Row']
+type TimeEntry = Database['public']['Tables']['time_entries']['Row']
+type ActivityLog = Database['public']['Tables']['activity_logs']['Row']
 
 interface LeaveBalance {
   leave_type: string
@@ -29,8 +32,13 @@ interface UserProfile {
   role: string;
 }
 
+interface TimeTrackingData {
+  date: string;
+  duration: number;
+}
+
 export default function EmployeeDashboard() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const { toast } = useToast()
   const [timeData, setTimeData] = useState({
     today: 0,
@@ -47,12 +55,13 @@ export default function EmployeeDashboard() {
 
   const router = useRouter()
 
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+
+  const ws = useWebSocket()
 
   useEffect(() => {
     const checkAuthAndLoadProfile = async () => {
       try {
-        // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) throw sessionError;
@@ -62,10 +71,9 @@ export default function EmployeeDashboard() {
           return;
         }
 
-        // Get user profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('id, full_name, department, role')
+          .select('*')
           .eq('id', session.user.id)
           .single();
 
@@ -75,7 +83,6 @@ export default function EmployeeDashboard() {
           throw new Error('Profile not found');
         }
 
-        // Verify user role
         if (profile.role !== 'employee') {
           toast({
             title: 'Access Denied',
@@ -110,15 +117,44 @@ export default function EmployeeDashboard() {
     }
   }, [user])
 
+  useEffect(() => {
+    if (!user?.id || !ws) return;
+
+    try {
+      if (!ws.getConnectionStatus()) {
+        ws.startMonitoring();
+      }
+    } catch (error) {
+      console.error('Error starting monitoring:', error);
+      toast({
+        title: 'Warning',
+        description: 'Failed to start activity monitoring. Some features may be limited.',
+        variant: 'destructive',
+      });
+    }
+
+    return () => {
+      try {
+        if (ws.getConnectionStatus()) {
+          ws.stopMonitoring();
+        }
+      } catch (error) {
+        console.error('Error stopping monitoring:', error);
+      }
+    };
+  }, [user?.id, ws, toast]);
+
   const fetchDashboardData = async () => {
     if (!user) return
     setIsLoading(true)
     try {
       // Fetch time tracking data
-      const { data: timeTrackingData } = await supabase
-        .from("time_tracking")
-        .select("date, duration")
-        .eq("user_id", user.id)
+      const { data: timeEntries, error: timeError } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('user_id', user.id) as { data: TimeEntry[] | null, error: any };
+
+      if (timeError) throw timeError;
 
       // Calculate time totals
       const today = new Date()
@@ -130,22 +166,27 @@ export default function EmployeeDashboard() {
       const monthStartISO = monthStart.toISOString().split("T")[0]
 
       const calculatedTimeData = {
-        today: timeTrackingData?.filter(t => t.date === todayISO).reduce((acc, curr) => acc + curr.duration, 0) || 0,
-        week: timeTrackingData?.filter(t => t.date >= weekStartISO).reduce((acc, curr) => acc + curr.duration, 0) || 0,
-        month: timeTrackingData?.filter(t => t.date >= monthStartISO).reduce((acc, curr) => acc + curr.duration, 0) || 0,
+        today: timeEntries?.filter(t => t.start_time.startsWith(todayISO))
+          .reduce((acc, curr) => acc + (curr.duration || 0), 0) || 0,
+        week: timeEntries?.filter(t => t.start_time >= weekStartISO)
+          .reduce((acc, curr) => acc + (curr.duration || 0), 0) || 0,
+        month: timeEntries?.filter(t => t.start_time >= monthStartISO)
+          .reduce((acc, curr) => acc + (curr.duration || 0), 0) || 0,
       }
 
       setTimeData(calculatedTimeData)
 
       // Fetch recent activity
-      const { data: activityData } = await supabase
-        .from("activity_logs")
-        .select("id, description, created_at, user_id")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5)
+      const { data: activityData, error: activityError } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5) as { data: ActivityLog[] | null, error: any };
 
-      setRecentActivity(activityData as ActivityLog[] || [])
+      if (activityError) throw activityError;
+
+      setRecentActivity(activityData || [])
     } catch (error) {
       console.error("Error fetching core dashboard data:", error)
       toast({
@@ -162,30 +203,11 @@ export default function EmployeeDashboard() {
     if (!user) return
     setIsLoadingExtraStats(true)
     try {
-      // TODO: Fetch Target Monthly Hours from 'company_settings' table
-      // const { data: settingsData, error: settingsError } = await supabase
-      //   .from("company_settings")
-      //   .select("setting_value")
-      //   .eq("setting_name", "target_monthly_hours")
-      //   .single()
-      // if (settingsError) console.error("Error fetching target hours:", settingsError)
-      // setTargetMonthlyHours(settingsData ? parseFloat(settingsData.setting_value) : 160) // Default 160
-      setTargetMonthlyHours(160) // Mock value
-
-      // TODO: Fetch Leave Balances from 'leave_balances' table for the current user
-      // const currentYear = new Date().getFullYear()
-      // const { data: balancesData, error: balancesError } = await supabase
-      //   .from("leave_balances")
-      //   .select("leave_type, total_allotted, total_taken")
-      //   .eq("user_id", user.id)
-      //   .eq("year", currentYear)
-      // if (balancesError) console.error("Error fetching leave balances:", balancesError)
-      // setLeaveBalances(balancesData || [])
-      setLeaveBalances([ // Mock values
+      setTargetMonthlyHours(160) // Mock value for now
+      setLeaveBalances([ // Mock values for now
         { leave_type: "Vacation", total_allotted: 15, total_taken: 5 },
         { leave_type: "Sick Leave", total_allotted: 10, total_taken: 2 },
       ])
-
     } catch (error) {
       console.error("Error fetching extra stats:", error)
       toast({
@@ -213,10 +235,24 @@ export default function EmployeeDashboard() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
       </div>
     )
   }
@@ -235,172 +271,85 @@ export default function EmployeeDashboard() {
   ).join(", ") || "N/A"
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome, {profile.full_name}!</CardTitle>
-          <CardDescription>Employee Dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Department</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>{profile.department || 'Not assigned'}</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Role</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="capitalize">{profile.role}</p>
-              </CardContent>
-            </Card>
-            
-            {/* Add more dashboard cards/widgets here */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-200">
+      {/* Fixed Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-bold text-white">WorkMatrix</h1>
+              <div className="hidden md:flex space-x-6">
+                <a href="/employee/dashboard" className="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                  Dashboard
+                </a>
+                <a href="/employee/time" className="text-gray-400 hover:text-blue-300 transition-colors duration-200">
+                  Time Tracking
+                </a>
+                <a href="/employee/tasks" className="text-gray-400 hover:text-blue-300 transition-colors duration-200">
+                  Tasks
+                </a>
+                <a href="/employee/reports" className="text-gray-400 hover:text-blue-300 transition-colors duration-200">
+                  Reports
+                </a>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-400">{profile.full_name}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-white hover:bg-gray-700 transition-colors duration-200"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </nav>
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Employee Dashboard</h1>
-        <Button onClick={() => { fetchDashboardData()
-          fetchExtraStats()
-        }} disabled={isLoading || isLoadingExtraStats}>
-          { (isLoading || isLoadingExtraStats) ? "Refreshing..." : "Refresh"}
-        </Button>
-      </div>
-
-      {/* Top Row: Time Tracking Overview & Monthly Work/Leave Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Time Tracking Cards (col-span-2 on lg) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Time</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatTime(timeData.today)}</div>
-              <p className="text-xs text-muted-foreground">Total time tracked today</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Week</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatTime(timeData.week)}</div>
-              <p className="text-xs text-muted-foreground">Total time this week</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatTime(timeData.month)}</div>
-              <p className="text-xs text-muted-foreground">Total time this month</p>
-            </CardContent>
-          </Card>
+      {/* Main Content */}
+      <main className="container mx-auto px-6 pt-24 pb-8">
+        {/* Welcome Section */}
+        <div className="mb-8 animate-fade-in">
+          <h2 className="text-2xl font-semibold text-white mb-2">Welcome back, {profile.full_name}</h2>
+          <p className="text-gray-400">Track your work, manage tasks, and stay productive.</p>
         </div>
 
-        {/* Monthly Work & Leave Status Card (col-span-1 on lg) */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Monthly Status</CardTitle>
-            <CardDescription>Your work hours and leave balance for this month.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoadingExtraStats ? (
-              <p>Loading monthly stats...</p>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Target Monthly Hours:</span>
-                  <span className="text-sm font-semibold">{monthlyTarget} hrs</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Hours Worked This Month:</span>
-                  <span className="text-sm font-semibold">{workedThisMonth.hours}h {workedThisMonth.minutes}m</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Total Leaves Allotted:</span>
-                  <span className="text-sm font-semibold">{leavesAvailableText}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Leaves Remaining:</span>
-                  <span className="text-sm font-semibold">{leavesRemainingText}</span>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Time Tracking Card */}
+          <div className="col-span-1 animate-fade-in [animation-delay:200ms]">
+            <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-xl hover:shadow-2xl transition-shadow duration-200">
+              <TimeTrackingCard />
+            </Card>
+          </div>
 
-      {/* Calendar View & Daily Time - TODO */}
-      {/* This section will be for the calendar and daily time display */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Time Breakdown & Calendar</CardTitle>
-          <CardDescription>View your tracked time per day. (Calendar coming soon)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Calendar and detailed daily time view will be implemented here.</p>
-          {/* Placeholder for calendar component and daily time list */}
-        </CardContent>
-      </Card>
+          {/* Activity Feed */}
+          <div className="col-span-1 animate-fade-in [animation-delay:400ms]">
+            <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-xl hover:shadow-2xl transition-shadow duration-200">
+              <ActivityFeed activities={recentActivity} />
+            </Card>
+          </div>
 
-      {/* Recent Activity & Quick Actions (existing sections) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest actions and updates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentActivity.length > 0 ? (
-            <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4">
-                  <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(activity.created_at).toLocaleString()}
-                      </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No recent activity</p>
-            )}
-          </CardContent>
-        </Card>
+          {/* Task List */}
+          <div className="col-span-1 animate-fade-in [animation-delay:600ms]">
+            <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-xl hover:shadow-2xl transition-shadow duration-200">
+              <TaskList />
+            </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-20 md:h-24 flex flex-col items-center justify-center space-y-1" onClick={() => router.push("/employee/profile")}>
-              <FileText className="h-5 w-5 md:h-6 md:w-6" />
-              <span className="text-xs md:text-sm">View Profile</span>
-            </Button>
-            <Button variant="outline" className="h-20 md:h-24 flex flex-col items-center justify-center space-y-1" onClick={() => router.push("/employee/leaves")}>
-              <Moon className="h-5 w-5 md:h-6 md:w-6" /> 
-              <span className="text-xs md:text-sm">Apply for Leave</span>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Time Summary Grid */}
+        <div className="animate-fade-in [animation-delay:800ms]">
+          <WorkSummaryGrid timeData={timeData} />
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-12 text-center text-gray-500 text-sm">
+          Powered by WorkMatrix
+        </footer>
+      </main>
     </div>
   )
 }

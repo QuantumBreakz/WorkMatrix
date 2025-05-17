@@ -18,15 +18,16 @@ for directory in [DATA_DIR, SCREENSHOTS_DIR, VIDEOS_DIR, LOGS_DIR]:
     directory.mkdir(exist_ok=True)
 
 # Supabase configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv('SUPABASE_URL', 'http://localhost:54321')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY', '')
+USER_ID = os.getenv('USER_ID', '')
 
 # Data collection settings
-SCREENSHOT_INTERVAL = int(os.getenv("SCREENSHOT_INTERVAL", 300))  # 5 minutes in seconds
+SCREENSHOT_INTERVAL = int(os.getenv('SCREENSHOT_INTERVAL', '300'))  # 5 minutes in seconds
 VIDEO_INTERVAL = 60 * 60       # 60 minutes in seconds
 ACTIVITY_INTERVAL = 10 * 60    # 10 minutes in seconds
-KEYSTROKE_INTERVAL = 60        # 1 minute in seconds
-SYNC_INTERVAL = int(os.getenv("SYNC_INTERVAL", 1800))  # 30 minutes in seconds
+KEYSTROKE_INTERVAL = int(os.getenv('KEYSTROKE_INTERVAL', '60'))    # 1 minute in seconds
+SYNC_INTERVAL = int(os.getenv('SYNC_INTERVAL', '120'))            # 2 minutes in seconds
 MAX_STORAGE_MB = int(os.getenv("MAX_STORAGE_MB", 450))  # Maximum storage in MB
 
 # Storage optimization
@@ -53,11 +54,18 @@ MAX_RETRIES = 3
 RETRY_DELAY = 60  # seconds
 
 # Logging
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 LOG_FORMAT = "{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 LOG_RETENTION = "1 week"
 
 # Activity tracking
-IDLE_THRESHOLD = 300  # 5 minutes in seconds
+IDLE_THRESHOLD = int(os.getenv('IDLE_THRESHOLD', '300'))          # 5 minutes in seconds
 MOUSE_MOVE_THRESHOLD = 10  # Minimum pixels for mouse movement
-KEYSTROKE_THRESHOLD = 1   # Minimum keystrokes for activity 
+KEYSTROKE_THRESHOLD = 1   # Minimum keystrokes for activity
+
+# WebSocket Configuration
+WS_PORT = int(os.getenv('WS_PORT', '8765'))
+WS_HOST = os.getenv('WS_HOST', 'localhost')
+
+# Create logs directory if it doesn't exist
+os.makedirs(LOGS_DIR, exist_ok=True) 

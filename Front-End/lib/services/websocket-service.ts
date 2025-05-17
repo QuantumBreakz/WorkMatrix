@@ -1,130 +1,274 @@
-import { create } from 'zustand';
+"use client";
 
-interface WebSocketState {
-  isConnected: boolean;
-  activityData: any;
-  screenshotData: any;
-  status: string;
-  connect: (userId: string) => void;
-  disconnect: () => void;
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+
+export type WebSocketMessage = {
+  type: string;
+  data?: any;
+  error?: string;
+  timestamp: string;
+};
+
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8765';
+const MAX_RETRIES = 5;
+const RETRY_INTERVAL = 3000;
+
+export function useWebSocket() {
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const { toast } = useToast();
+
+  const connect = useCallback(() => {
+    try {
+      const socket = new WebSocket(WS_URL);
+
+      socket.onopen = () => {
+        setIsConnected(true);
+        setRetryCount(0);
+        console.log('WebSocket connected');
+      };
+
+      socket.onclose = (event) => {
+        setIsConnected(false);
+        console.log('WebSocket disconnected', event.code);
+        
+        if (retryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            connect();
+          }, RETRY_INTERVAL);
+        } else {
+          console.error('Max reconnection attempts reached');
+          toast({
+            title: 'Connection Error',
+            description: 'Failed to connect to monitoring service. Some features may be limited.',
+            variant: 'destructive',
+          });
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        socket.close();
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // Handle incoming messages
+          console.log('Received:', data);
+        } catch (error) {
+          console.error('Error parsing message:', error);
+        }
+      };
+
+      setWs(socket);
+    } catch (error) {
+      console.error('Error creating WebSocket:', error);
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          connect();
+        }, RETRY_INTERVAL);
+      }
+    }
+  }, [retryCount, toast]);
+
+  const startMonitoring = useCallback(() => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      connect();
+    }
+  }, [ws, connect]);
+
+  const stopMonitoring = useCallback(() => {
+    if (ws) {
+      ws.close();
+      setWs(null);
+      setIsConnected(false);
+    }
+  }, [ws]);
+
+  const getConnectionStatus = useCallback(() => {
+    return isConnected;
+  }, [isConnected]);
+
+  useEffect(() => {
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [ws]);
+
+  return {
+    startMonitoring,
+    stopMonitoring,
+    getConnectionStatus,
+    isConnected
+  };
 }
 
-class WebSocketService {
+export class WebSocketService {
   private ws: WebSocket | null = null;
-  private userId: string | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectTimeout = 5000; // 5 seconds
+  private reconnectDelay = 1000; // Start with 1 second
+  private messageHandlers: Map<string, (data: any) => void> = new Map();
+  private userId: string;
+  private isConnecting = false;
+  private pingInterval: NodeJS.Timeout | null = null;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
 
-  constructor() {
-    // Initialize WebSocket connection when service is created
-    this.connect = this.connect.bind(this);
-    this.disconnect = this.disconnect.bind(this);
-    this.handleMessage = this.handleMessage.bind(this);
-    this.handleError = this.handleError.bind(this);
-    this.handleClose = this.handleClose.bind(this);
+  constructor(userId: string) {
+    this.userId = userId;
   }
 
-  connect(userId: string) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
+  connect() {
+    if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
+
+    this.isConnecting = true;
+    this.cleanup(); // Clean up any existing connections
+
+    try {
+      this.ws = new WebSocket('ws://localhost:8765');
+
+      this.ws.onopen = () => {
+        console.log('WebSocket connected');
+        this.isConnecting = false;
+        this.reconnectAttempts = 0;
+        this.reconnectDelay = 1000;
+        
+        // Send authentication message
+        this.send({
+          type: 'auth',
+          user_id: this.userId,
+          timestamp: new Date().toISOString()
+        });
+
+        // Start ping interval
+        this.startPingInterval();
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          const handler = this.messageHandlers.get(message.type);
+          if (handler) {
+            handler(message.data);
+          }
+        } catch (error) {
+          console.error('Error handling WebSocket message:', error);
+        }
+      };
+
+      this.ws.onclose = (event) => {
+        console.log('WebSocket disconnected', event.code, event.reason);
+        this.isConnecting = false;
+        this.cleanup();
+        this.reconnect();
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.isConnecting = false;
+        // Let onclose handle reconnection
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket:', error);
+      this.isConnecting = false;
+      this.reconnect();
+    }
+  }
+
+  private cleanup() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    if (this.ws) {
+      // Remove all event listeners
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+
+      // Close connection if it's still open
+      if (this.ws.readyState === WebSocket.OPEN) {
+        this.ws.close();
+      }
+      this.ws = null;
+    }
+  }
+
+  private startPingInterval() {
+    this.pingInterval = setInterval(() => {
+      this.send({
+        type: 'ping',
+        timestamp: new Date().toISOString()
+      });
+    }, 30000); // Send ping every 30 seconds
+  }
+
+  private reconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max reconnection attempts reached');
       return;
     }
 
-    this.userId = userId;
-    this.ws = new WebSocket('ws://localhost:8765');
-
-    this.ws.onopen = () => {
-      console.log('WebSocket connected');
-      this.reconnectAttempts = 0;
-      useWebSocketStore.getState().isConnected = true;
-      
-      // Send authentication message
-      this.ws?.send(JSON.stringify({
-        type: 'auth',
-        user_id: userId
-      }));
-    };
-
-    this.ws.onmessage = this.handleMessage;
-    this.ws.onerror = this.handleError;
-    this.ws.onclose = this.handleClose;
-  }
-
-  disconnect() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-      this.userId = null;
-      useWebSocketStore.getState().isConnected = false;
-    }
-  }
-
-  private handleMessage(event: MessageEvent) {
-    try {
-      const data = JSON.parse(event.data);
-      
-      switch (data.type) {
-        case 'activity_update':
-          useWebSocketStore.getState().activityData = data.data;
-          break;
-        case 'screenshot_update':
-          useWebSocketStore.getState().screenshotData = data.data;
-          break;
-        case 'status_update':
-          useWebSocketStore.getState().status = data.status;
-          break;
-        case 'connection_status':
-          useWebSocketStore.getState().isConnected = data.status === 'connected';
-          break;
-        default:
-          console.warn('Unknown message type:', data.type);
-      }
-    } catch (error) {
-      console.error('Error parsing WebSocket message:', error);
-    }
-  }
-
-  private handleError(error: Event) {
-    console.error('WebSocket error:', error);
-    useWebSocketStore.getState().isConnected = false;
-  }
-
-  private handleClose(event: CloseEvent) {
-    console.log('WebSocket closed:', event.code, event.reason);
-    useWebSocketStore.getState().isConnected = false;
-
-    // Attempt to reconnect if not explicitly disconnected
-    if (this.userId && this.reconnectAttempts < this.maxReconnectAttempts) {
+    this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      setTimeout(() => this.connect(this.userId!), this.reconnectTimeout);
-    }
+      this.reconnectDelay *= 2; // Exponential backoff
+      this.connect();
+    }, this.reconnectDelay);
   }
 
-  // Send ping to keep connection alive
-  startPing() {
+  send(message: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ type: 'ping' }));
+      try {
+        this.ws.send(JSON.stringify(message));
+      } catch (error) {
+        console.error('Error sending WebSocket message:', error);
+      }
     }
   }
-}
 
-// Create WebSocket service instance
-const websocketService = new WebSocketService();
+  startMonitoring() {
+    this.connect(); // Ensure connection is established
+    this.send({
+      type: 'start_monitoring',
+      timestamp: new Date().toISOString()
+    });
+  }
 
-// Create Zustand store for WebSocket state
-export const useWebSocketStore = create<WebSocketState>((set) => ({
-  isConnected: false,
-  activityData: null,
-  screenshotData: null,
-  status: '',
-  connect: (userId: string) => {
-    websocketService.connect(userId);
-    // Start ping interval
-    setInterval(() => websocketService.startPing(), 30000); // Ping every 30 seconds
-  },
-  disconnect: () => websocketService.disconnect(),
-}));
+  stopMonitoring() {
+    this.send({
+      type: 'stop_monitoring',
+      timestamp: new Date().toISOString()
+    });
+  }
 
-export default websocketService; 
+  onActivityUpdate(handler: (data: any) => void) {
+    this.messageHandlers.set('activity_update', handler);
+  }
+
+  onScreenshotUpdate(handler: (data: any) => void) {
+    this.messageHandlers.set('screenshot_update', handler);
+  }
+
+  getConnectionStatus(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  close() {
+    this.cleanup();
+  }
+} 

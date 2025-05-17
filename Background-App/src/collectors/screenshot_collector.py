@@ -1,103 +1,108 @@
-import uuid
 import os
+import time
+import logging
+import mss
+import mss.tools
 from datetime import datetime
-import platform
-import pyautogui
-from PIL import Image
-from utils.sqlite_manager import SQLiteManager
 from pathlib import Path
+from typing import Optional, Dict
+from ..utils.database import LocalDatabase
 
-TERMINAL_APPS = [
-    "cmd.exe", "powershell.exe", "conhost.exe", # Windows
-    "gnome-terminal", "xterm", "konsole", "bash", "zsh" # Linux
-]
-
-def is_terminal_active():
-    try:
-        import psutil
-        for proc in psutil.process_iter(['name']):
-            name = proc.info['name']
-            if name and name.lower() in TERMINAL_APPS:
-                if proc.status() == psutil.STATUS_RUNNING:
-                    return True
-    except Exception:
-        pass
-    return False
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/screenshots.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 class ScreenshotCollector:
-    def __init__(self, user_id, output_dir="data/screenshots"):
+    def __init__(self, user_id: str):
         self.user_id = user_id
-        self.output_dir = Path(output_dir)
-        self.sqlite_db = SQLiteManager()
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.db = LocalDatabase()
+        self.screenshot_dir = Path('data/screenshots') / user_id
+        self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+        self.last_screenshot_time = 0
+        self.screenshot_interval = 300  # 5 minutes
+        logger.info(f"Screenshot collector initialized for user {user_id}")
 
-    def capture_screenshot(self):
-        if is_terminal_active():
-            return None
+    def capture_screenshot(self) -> Optional[Dict]:
+        """Capture a screenshot if enough time has passed since the last one."""
+        current_time = time.time()
         
-        timestamp_dt = datetime.utcnow()
-        timestamp_iso = timestamp_dt.isoformat()
-        file_id = str(uuid.uuid4())
-        file_name = f"{file_id}.webp"
-        local_file_path = str(self.output_dir / file_name)
-
-        try:
-            screenshot = pyautogui.screenshot()
-            if screenshot.mode == 'RGBA':
-                screenshot = screenshot.convert('RGB')
-            screenshot.save(local_file_path, "WEBP", quality=80)
-            file_size = Path(local_file_path).stat().st_size
-        except Exception as e:
-            print(f"Error capturing/saving screenshot: {e}")
+        # Check if enough time has passed
+        if current_time - self.last_screenshot_time < self.screenshot_interval:
             return None
 
-        data = {
-            "id": file_id,
-            "user_id": self.user_id,
-            "timestamp": timestamp_iso,
-            "local_file_path": local_file_path,
-            "supabase_storage_path": None,
-            "file_size": file_size,
-            "created_at": timestamp_iso,
-            "is_synced_to_activity_log": 0
-        }
-        
         try:
-            self.sqlite_db.insert_record("screenshots", data)
+            # Create timestamp for filename
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"screenshot_{timestamp}.png"
+            filepath = self.screenshot_dir / filename
+
+            # Capture screenshot
+            with mss.mss() as sct:
+                # Capture the main monitor
+                monitor = sct.monitors[1]  # Primary monitor
+                screenshot = sct.grab(monitor)
+                mss.tools.to_png(screenshot.rgb, screenshot.size, output=str(filepath))
+
+            # Create screenshot data
+            screenshot_data = {
+                "user_id": self.user_id,
+                "filename": filename,
+                "filepath": str(filepath),
+                "timestamp": datetime.now().isoformat(),
+                "monitor": monitor,
+                "size": screenshot.size
+            }
+
+            # Store in local database
+            self.db.insert_screenshot(self.user_id, str(filepath))
+            
+            # Update last screenshot time
+            self.last_screenshot_time = current_time
+
+            logger.info(f"Screenshot captured: {filename}")
+            return screenshot_data
+
         except Exception as e:
-            print(f"Error inserting screenshot metadata to local DB: {e}")
-            try:
-                Path(local_file_path).unlink(missing_ok=True)
-            except Exception as unlink_e:
-                print(f"Error deleting orphaned screenshot {local_file_path}: {unlink_e}")
+            logger.error(f"Error capturing screenshot: {str(e)}")
             return None
 
-        return {"id": file_id, "local_file_path": local_file_path, "timestamp": timestamp_iso}
-
-    def cleanup_old_screenshots(self, days: int = 30):
-        """Clean up old screenshots."""
+    def get_recent_screenshots(self, limit: int = 10) -> list:
+        """Get list of recent screenshots."""
         try:
-            # Delete old files
-            for file in self.output_dir.glob("*.webp"):
-                if (datetime.now() - datetime.fromtimestamp(file.stat().st_mtime)).days > days:
+            screenshots = []
+            for file in sorted(self.screenshot_dir.glob("*.png"), reverse=True)[:limit]:
+                screenshots.append({
+                    "filename": file.name,
+                    "filepath": str(file),
+                    "timestamp": datetime.fromtimestamp(file.stat().st_mtime).isoformat()
+                })
+            return screenshots
+        except Exception as e:
+            logger.error(f"Error getting recent screenshots: {str(e)}")
+            return []
+
+    def cleanup_old_screenshots(self, days: int = 7) -> None:
+        """Clean up screenshots older than specified days."""
+        try:
+            cutoff_time = time.time() - (days * 24 * 60 * 60)
+            for file in self.screenshot_dir.glob("*.png"):
+                if file.stat().st_mtime < cutoff_time:
                     file.unlink()
-                    print(f"Deleted old screenshot: {file.name}")
-            
-            # Clean up database records
-            self.sqlite_db.cleanup_old_data(days)
-            
+            logger.info(f"Cleaned up screenshots older than {days} days")
         except Exception as e:
-            print(f"Error cleaning up screenshots: {str(e)}")
+            logger.error(f"Error cleaning up screenshots: {str(e)}")
 
-    def get_storage_usage(self) -> int:
-        """
-        Get total storage used by screenshots in bytes.
-        """
+    def close(self) -> None:
+        """Close the database connection."""
         try:
-            total_size = sum(
-                f.stat().st_size for f in self.output_dir.glob("*.webp")
-            )
-            return total_size
+            self.db.close()
+            logger.info("Screenshot collector closed")
         except Exception as e:
-            print(f"Error calculating storage usage: {str(e)}")
-            return 0 
+            logger.error(f"Error closing screenshot collector: {str(e)}") 
