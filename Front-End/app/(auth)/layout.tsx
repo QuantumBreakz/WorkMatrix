@@ -1,6 +1,5 @@
 import AuthWrapper from '@/components/auth/AuthWrapper';
-import { ThemeToggle } from '@/components/theme-toggle';
-import Image from 'next/image';
+import { Header } from '@/components/layout/header';
 
 export default function AuthLayout({
   children,
@@ -8,24 +7,12 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthWrapper requireUnauth>
+    <AuthWrapper requireAuth={false}>
       <div className="min-h-screen grid lg:grid-cols-2">
         {/* Left side - Auth form */}
         <div className="flex items-center justify-center p-8">
           <div className="w-full max-w-md space-y-8">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <Image
-                  src="/logo.png"
-                  alt="WorkMatrix Logo"
-                  width={32}
-                  height={32}
-                  priority
-                />
-                <span className="text-2xl font-bold">WorkMatrix</span>
-              </div>
-              <ThemeToggle />
-            </div>
+            <Header showNav={false} showUserNav={false} className="relative bg-transparent border-0" />
             {children}
           </div>
         </div>

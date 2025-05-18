@@ -1,248 +1,106 @@
 # WorkMatrix Background Service
 
-A Python-based system monitoring service that captures and processes employee activity data.
+## Overview
+The WorkMatrix Background Service is a Windows application that monitors user activity, captures screenshots, and syncs data with the WorkMatrix frontend application.
 
-## Features
-
-- 🖥️ **System Monitoring**
-  - Application usage tracking
-  - Active window detection
-  - Idle time monitoring
-  - Keyboard/mouse activity logging
-  
-- 📸 **Screenshot Management**
-  - Configurable capture intervals
-  - Privacy-aware capturing
-  - Secure storage and encryption
-  - Automatic cleanup
-  
-- 🔄 **Data Synchronization**
-  - Real-time Supabase sync
-  - Offline support with SQLite
-  - Bandwidth-efficient uploads
-  - Data compression
-  
-- 🔐 **Security**
-  - End-to-end encryption
-  - Secure data transmission
-  - Privacy controls
-  - Data retention policies
-
-## Architecture
-
+## Directory Structure
 ```
-src/
-├── collectors/           # Data collection modules
-│   ├── activity/        # Activity tracking
-│   ├── screenshot/      # Screenshot capture
-│   └── system/          # System metrics
-├── services/            # Core services
-│   ├── monitor/        # Monitoring service
-│   ├── storage/        # Data storage
-│   └── sync/          # Sync service
-├── utils/              # Utility functions
-└── main.py            # Entry point
+Background-App/
+├── src/                # Source code
+│   ├── utils/         # Utility modules
+│   ├── services/      # Core services
+│   └── collectors/    # Data collectors
+├── dist/              # Distribution files
+│   └── workmatrix-background.exe
+├── tools/             # Build and maintenance tools
+│   ├── build_background.py
+│   ├── build_exe.py
+│   └── cleanup.py
+├── scripts/           # Utility scripts
+│   └── start_workmatrix.ps1
+├── config/            # Configuration files
+│   └── default.toml
+├── data/              # Application data
+│   └── screenshots/
+├── logs/              # Log files
+├── docs/              # Documentation
+│   ├── api/          # API documentation
+│   ├── guides/       # User guides
+│   └── index.md      # Documentation index
+└── tests/             # Test files
+    ├── conftest.py
+    └── test_*.py
 ```
 
-## Prerequisites
+## Quick Start
 
-- Python 3.9 or higher
-- Virtual environment (recommended)
-- System dependencies:
-  - Windows: `pywin32`
-  - Linux: `xlib`, `scrot`
-  - macOS: `pyobjc`
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/QuantumBreakz/WorkMatrix.git
-cd WorkMatrix/Background-App
-```
-
-2. Create and activate virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
-```
-
-3. Install dependencies:
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Configure the service:
+2. Build the application:
 ```bash
-cp config.example.py config.py
-# Edit config.py with your settings
+python tools/build_background.py
 ```
 
-## Configuration
+3. Configure the application:
+- Copy `config/default.toml` to `config/config.toml`
+- Update the configuration values as needed
 
-### config.py
-```python
-CONFIG = {
-    'monitoring': {
-        'screenshot_interval': 300,  # seconds
-        'activity_interval': 60,     # seconds
-        'idle_threshold': 300,       # seconds
-    },
-    'storage': {
-        'max_local_storage': 1024,   # MB
-        'retention_period': 30,      # days
-    },
-    'supabase': {
-        'url': 'your_supabase_url',
-        'key': 'your_supabase_key',
-    }
-}
+4. Run the application:
+```powershell
+.\scripts\start_workmatrix.ps1
 ```
-
-## Usage
-
-### Running the Service
-
-#### Development
-```bash
-python src/main.py
-```
-
-#### Production
-
-##### Linux (systemd)
-1. Copy service file:
-```bash
-sudo cp scripts/linux/workmatrix.service /etc/systemd/system/
-```
-
-2. Start service:
-```bash
-sudo systemctl enable workmatrix
-sudo systemctl start workmatrix
-```
-
-##### Windows
-1. Install as Windows Service:
-```bash
-scripts\windows\install_windows_service.bat
-```
-
-2. Start service:
-```bash
-net start WorkMatrix
-```
-
-### Monitoring
-
-The service provides several monitoring endpoints:
-
-- Health check: `http://localhost:5000/health`
-- Metrics: `http://localhost:5000/metrics`
-- Status: `http://localhost:5000/status`
-
-### Logs
-
-- Linux: `/var/log/workmatrix/`
-- Windows: `C:\ProgramData\WorkMatrix\logs\`
 
 ## Development
 
-### Project Structure
-
-```
-Background-App/
-├── docs/               # Documentation
-├── migrations/         # Database migrations
-├── scripts/           # Installation scripts
-│   ├── linux/        # Linux scripts
-│   └── windows/      # Windows scripts
-├── src/              # Source code
-├── tests/            # Test files
-└── requirements.txt  # Python dependencies
-```
-
-### Adding New Collectors
-
-1. Create a new collector class:
-```python
-from src.collectors import BaseCollector
-
-class NewCollector(BaseCollector):
-    def collect(self):
-        # Implementation
-        pass
-```
-
-2. Register in main.py:
-```python
-from collectors.new_collector import NewCollector
-
-collector = NewCollector()
-monitor.register_collector(collector)
+### Building
+The build process is handled by PyInstaller and configured in `tools/build_background.py`. To build:
+```bash
+python tools/build_background.py
 ```
 
 ### Testing
-
+Run tests using pytest:
 ```bash
-# Run tests
-python -m pytest
-
-# Run with coverage
-python -m pytest --cov=src
+pytest tests/
 ```
 
-## Security Considerations
+### Documentation
+- API documentation is in `docs/api/`
+- User guides are in `docs/guides/`
+- See `docs/index.md` for the documentation index
 
-### Data Privacy
+## Configuration
 
-- Screenshots are encrypted before storage
-- Personal data is anonymized
-- Sensitive windows are excluded
-- Data is purged after retention period
+The application can be configured through:
+1. Environment variables
+2. Configuration file (`config/config.toml`)
+3. Command-line arguments
 
-### Network Security
-
-- All API calls use HTTPS
-- WebSocket connections are secured
-- Data is compressed and encrypted
-- Rate limiting is implemented
+Key configuration options:
+- Screenshot interval
+- Keystroke monitoring
+- Sync frequency
+- Storage limits
+- WebSocket connection
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Service Won't Start**
-   - Check logs for errors
-   - Verify permissions
-   - Check dependencies
-
-2. **High CPU Usage**
-   - Adjust collection intervals
-   - Check resource limits
-   - Update collectors
-
-3. **Sync Issues**
-   - Check network connection
-   - Verify Supabase credentials
-   - Check local storage
+Check the following log files in the `logs` directory:
+- `workmatrix.log` - Main application log
+- `error.log` - Error messages
+- `performance.log` - Performance metrics
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Add tests for new features
-4. Submit a pull request
-
-### Code Style
-
-We follow PEP 8 guidelines. Use `black` for formatting:
-
-```bash
-black src/
-```
+3. Make your changes
+4. Run tests
+5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details. 

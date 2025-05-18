@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Square } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/lib/supabase-client';
 import { useToast } from '@/components/ui/use-toast';
+import { useRealtimeSubscription } from '@/lib/supabase-realtime';
 
 // Helper function since it's missing from utils
 function formatTime(seconds: number): string {
@@ -41,49 +42,54 @@ export function TimeTrackingCard() {
     };
   }, [isTracking, startTime]);
 
-  useEffect(() => {
-    // Load current tracking status
-    const loadTrackingStatus = async () => {
-      if (!user?.id) return;
+  const loadTrackingStatus = useCallback(async () => {
+    if (!user?.id) return;
 
-      try {
-        const { data: timeEntry, error } = await supabase
-          .from('time_entries')
-          .select('id, user_id, start_time, end_time, status, duration')
-          .eq('user_id', user.id)
-          .is('end_time', null)
-          .eq('status', 'active')
-          .maybeSingle();
+    try {
+      const { data: timeEntry, error } = await supabase
+        .from('time_entries')
+        .select('id, user_id, start_time, end_time, status, duration')
+        .eq('user_id', user.id)
+        .is('end_time', null)
+        .eq('status', 'active')
+        .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching time entry:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load time tracking status',
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        if (timeEntry) {
-          setIsTracking(true);
-          setStartTime(new Date(timeEntry.start_time));
-          const now = new Date();
-          const elapsed = Math.floor((now.getTime() - new Date(timeEntry.start_time).getTime()) / 1000);
-          setElapsedTime(elapsed);
-        }
-      } catch (error) {
-        console.error('Error in loadTrackingStatus:', error);
+      if (error) {
         toast({
           title: 'Error',
           description: 'Failed to load time tracking status',
           variant: 'destructive',
         });
+        return;
       }
-    };
 
-    loadTrackingStatus();
+      if (timeEntry) {
+        setIsTracking(true);
+        setStartTime(new Date(timeEntry.start_time));
+        const now = new Date();
+        const elapsed = Math.floor((now.getTime() - new Date(timeEntry.start_time).getTime()) / 1000);
+        setElapsedTime(elapsed);
+      } else {
+        setIsTracking(false);
+        setStartTime(null);
+        setElapsedTime(0);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load time tracking status',
+        variant: 'destructive',
+      });
+    }
   }, [user?.id, toast]);
+
+  // Subscribe to time entry changes
+  useRealtimeSubscription('time_entries', user?.id, loadTrackingStatus);
+
+  // Initial load
+  useEffect(() => {
+    loadTrackingStatus();
+  }, [loadTrackingStatus]);
 
   const startTracking = async () => {
     if (!user?.id) return;
@@ -99,7 +105,6 @@ export function TimeTrackingCard() {
         });
 
       if (error) {
-        console.error('Error starting time tracking:', error);
         toast({
           title: 'Error',
           description: 'Failed to start time tracking',
@@ -108,15 +113,11 @@ export function TimeTrackingCard() {
         return;
       }
 
-      setIsTracking(true);
-      setStartTime(now);
-      setElapsedTime(0);
       toast({
         title: 'Success',
         description: 'Time tracking started',
       });
     } catch (error) {
-      console.error('Error in startTracking:', error);
       toast({
         title: 'Error',
         description: 'Failed to start time tracking',
@@ -144,7 +145,6 @@ export function TimeTrackingCard() {
         .eq('status', 'active');
 
       if (error) {
-        console.error('Error stopping time tracking:', error);
         toast({
           title: 'Error',
           description: 'Failed to stop time tracking',
@@ -153,15 +153,11 @@ export function TimeTrackingCard() {
         return;
       }
 
-      setIsTracking(false);
-      setStartTime(null);
-      setElapsedTime(0);
       toast({
         title: 'Success',
         description: 'Time tracking stopped',
       });
     } catch (error) {
-      console.error('Error in stopTracking:', error);
       toast({
         title: 'Error',
         description: 'Failed to stop time tracking',
@@ -203,18 +199,13 @@ export function TimeTrackingCard() {
               <Button
                 onClick={stopTracking}
                 variant="destructive"
-                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                className="w-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 size="lg"
               >
                 <Square className="mr-2 h-5 w-5" />
                 Stop Working
               </Button>
             )}
-          </div>
-
-          {/* Status Indicator */}
-          <div className="absolute top-0 right-0">
-            <div className={`h-2 w-2 rounded-full ${isTracking ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
           </div>
         </div>
       </CardContent>

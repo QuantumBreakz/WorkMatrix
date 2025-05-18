@@ -1,24 +1,87 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+}
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
+}
 
 let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
 
-export const getSupabaseClient = () => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-      },
-    });
-  }
-  return supabaseInstance;
-};
+export const supabase = (() => {
+  if (supabaseInstance) return supabaseInstance;
 
-export const supabase = getSupabaseClient();
+  supabaseInstance = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'sb-auth',
+        flowType: 'pkce',
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+      global: {
+        headers: {
+          'x-application-name': 'workmatrix',
+        },
+      },
+    }
+  );
+
+  // Create a system status channel
+  const systemChannel = supabaseInstance.channel('system_status');
+
+  // Subscribe to system events
+  systemChannel
+    .on('system', { event: 'error' }, ({ payload }) => {
+      console.error('Supabase realtime error:', payload);
+    })
+    .on('presence', { event: 'sync' }, () => {
+      console.log('Supabase realtime state: connected');
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Connected to Supabase realtime');
+      }
+    });
+
+  return supabaseInstance;
+})();
+
+// Helper function to check connection
+export async function checkSupabaseConnection() {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .select('count', { count: 'exact', head: true });
+
+    return !error;
+  } catch (error) {
+    console.error('Supabase connection check failed:', error);
+    return false;
+  }
+}
+
+// Helper function to handle Supabase errors
+export function handleSupabaseError(error: any): string {
+  if (error?.message) {
+    return error.message;
+  }
+  if (error?.error_description) {
+    return error.error_description;
+  }
+  return 'An unexpected error occurred';
+}
 
 export type { Database } from '@/types/supabase';
 export type Profile = Database['public']['Tables']['profiles']['Row'];

@@ -1,7 +1,7 @@
 # WorkMatrix
 
 <div align="center">
-  <img src="Front-End/public/Logo.png" alt="WorkMatrix Logo" width="200"/>
+  <img src="Logo.png" alt="WorkMatrix Logo" width="200"/>
   <h3>Modern Employee Monitoring & Time Tracking Solution</h3>
   <p>Built with Next.js 13, Supabase, and Python</p>
 </div>
@@ -38,7 +38,7 @@ WorkMatrix is a comprehensive employee monitoring and time tracking solution des
 
 ## Architecture
 
-The project consists of two main components:
+The project consists of three main components:
 
 ### Front-End (Next.js Application)
 - **Framework**: Next.js 13 (App Router)
@@ -51,8 +51,15 @@ The project consists of two main components:
 - **Language**: Python 3.9+
 - **Monitoring**: System-level activity tracking
 - **Storage**: Local SQLite with Supabase sync
-- **Deployment**: Systemd/Windows Service
+- **Deployment**: Windows Service/Systemd
 - **Security**: End-to-end encryption
+- **Structure**: Modular architecture with separate services
+
+### Dashboard (Admin Panel)
+- **Framework**: Next.js 13
+- **Data Visualization**: Chart.js
+- **Real-time Updates**: Supabase Realtime
+- **Role-based Access**: Admin/Manager views
 
 ## Installation
 
@@ -106,13 +113,29 @@ pip install -r requirements.txt
 
 4. Configure the service:
 ```bash
-cp config.example.py config.py
-# Edit config.py with your settings
+cp config/default.toml config/config.toml
+# Edit config.toml with your settings
 ```
 
 5. Run the service:
 ```bash
-python src/main.py
+python tools/build_background.py  # Build the executable
+./scripts/start_workmatrix.ps1   # Start the service
+```
+
+## Project Structure
+
+```
+WorkMatrix/
+├── Front-End/           # Next.js frontend application
+├── Background-App/      # Python monitoring service
+│   ├── src/            # Source code
+│   ├── tools/          # Build and maintenance tools
+│   ├── scripts/        # Utility scripts
+│   ├── config/         # Configuration files
+│   └── docs/           # Service documentation
+├── Dashboard/          # Admin dashboard
+└── supabase/          # Supabase configuration and migrations
 ```
 
 ## Documentation
@@ -121,9 +144,10 @@ Detailed documentation is available in the following sections:
 
 - [Front-End Documentation](Front-End/README.md)
 - [Background Service Documentation](Background-App/README.md)
+- [Dashboard Documentation](Dashboard/README.md)
 - [API Documentation](docs/API.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
-- [Security Considerations](docs/SECURITY.md)
+- [Security Considerations](SECURITY.md)
 
 ## Contributing
 
@@ -142,7 +166,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## Security
 
-For security concerns, please email [security@workmatrix.com](mailto:security@workmatrix.com).
+For security concerns, please see our [Security Policy](SECURITY.md).
 
 ## License
 
