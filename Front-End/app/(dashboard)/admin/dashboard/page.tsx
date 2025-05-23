@@ -1,192 +1,245 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useAuth } from "@/hooks"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
-import { Users, Activity, BarChart, FileText } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { supabase } from "@/lib/supabase-client"
 import { useRouter } from "next/navigation"
-import { Loading } from "@/components/ui/loading"
-import type { UserProfile } from "@/types/auth"
+import { Loader2, Users, Clock, Calendar, AlertTriangle } from "lucide-react"
+import { format, subDays } from "date-fns"
+import { ConnectionStatusCard } from "@/components/ui/connection-status"
+import { useConnectionManager } from "@/hooks/use-connection-manager"
 
 interface DashboardStats {
   totalEmployees: number
   activeEmployees: number
-  totalTimeTracked: number
-  averageHoursPerDay: number
+  totalHours: number
+  averageHours: number
+  pendingTasks: number
+  overdueTasks: number
+  recentActivity: {
+    type: string
+    description: string
+    timestamp: string
+  }[]
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
-  const [stats, setStats] = useState<DashboardStats>({
-    totalEmployees: 0,
-    activeEmployees: 0,
-    totalTimeTracked: 0,
-    averageHoursPerDay: 0,
-  })
-  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const { toast } = useToast()
+  const router = useRouter()
+  const { user, userRole } = useAuth()
+  const { isConnected } = useConnectionManager()
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user) {
-        router.push('/login')
-        return
-      }
+    if (!user || userRole !== 'admin') {
+      router.push('/login')
+      return
+    }
+    fetchDashboardStats()
+  }, [user, userRole, router])
 
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        // Fetch total employees
-        const { count: totalEmployees, error: employeesError } = await supabase
-          .from("profiles")
-          .select("*", { count: 'exact', head: true })
-          .eq("role", "employee")
-
-        if (employeesError) throw employeesError
-
-        // Fetch active employees (those who logged time today)
-        const today = new Date().toISOString().split('T')[0]
-        const { count: activeEmployees, error: activeError } = await supabase
-          .from("time_entries")
-          .select("*", { count: 'exact', head: true })
-          .gte("start_time", today)
-
-        if (activeError) throw activeError
-
-        // Fetch total time tracked
-        const { data: timeData, error: timeError } = await supabase
-          .from("time_entries")
-          .select("duration")
-
-        if (timeError) throw timeError
-
-        const totalTimeTracked = timeData?.reduce((acc, curr) => acc + (curr.duration || 0), 0) || 0
-        const averageHoursPerDay = totalTimeTracked / (totalEmployees || 1) / 3600 // Convert seconds to hours
-
-        setStats({
-          totalEmployees: totalEmployees || 0,
-          activeEmployees: activeEmployees || 0,
-          totalTimeTracked,
-          averageHoursPerDay,
-        })
-
-        // Fetch admin profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single()
-
-        if (profileError) throw profileError
-        setProfile(profileData as UserProfile)
-
-      } catch (error: any) {
-        console.error("Error fetching dashboard data:", error)
-        setError(error.message || 'Failed to load dashboard data')
-        toast({
-          title: "Error",
-          description: error.message || "Failed to load dashboard data. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchDashboardStats = async () => {
+    if (!isConnected) {
+      toast({
+        title: "Connection Required",
+        description: "Please ensure you are connected to the monitoring service to view dashboard statistics.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    fetchDashboardData()
-  }, [user, router, toast])
+    try {
+      // Fetch employee counts
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, is_active')
 
-  if (isLoading) {
-    return <Loading />
+      if (profilesError) throw profilesError
+
+      // Fetch time tracking data for the last 7 days
+      const sevenDaysAgo = subDays(new Date(), 7).toISOString()
+      const { data: timeEntries, error: timeError } = await supabase
+        .from('time_entries')
+        .select('*')
+        .gte('date', sevenDaysAgo)
+
+      if (timeError) throw timeError
+
+      // Fetch tasks
+      const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .in('status', ['pending', 'overdue'])
+
+      if (tasksError) throw tasksError
+
+      // Fetch recent activity
+      const { data: activity, error: activityError } = await supabase
+        .from('activity_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (activityError) throw activityError
+
+      // Calculate statistics
+      const totalEmployees = profiles?.length || 0
+      const activeEmployees = profiles?.filter(p => p.is_active)?.length || 0
+      const totalHours = timeEntries?.reduce((sum, entry) => sum + (entry.duration || 0), 0) || 0
+      const averageHours = totalEmployees > 0 ? totalHours / totalEmployees : 0
+      const pendingTasks = tasks?.filter(t => t.status === 'pending')?.length || 0
+      const overdueTasks = tasks?.filter(t => t.status === 'overdue')?.length || 0
+
+      setStats({
+        totalEmployees,
+        activeEmployees,
+        totalHours,
+        averageHours,
+        pendingTasks,
+        overdueTasks,
+        recentActivity: activity?.map(a => ({
+          type: a.type,
+          description: a.description,
+          timestamp: a.created_at
+        })) || []
+      })
+    } catch (error: any) {
+      console.error("Error fetching dashboard stats:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch dashboard statistics",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (error) {
+  if (!user || userRole !== 'admin') {
+    return null
+  }
+
+  if (isLoading) {
     return (
-      <div className="flex min-h-[400px] w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-500">Loading dashboard...</span>
       </div>
     )
   }
 
-  if (!user || !profile) {
-    router.push('/login')
-    return null
+  if (!stats) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Failed to load dashboard statistics
+      </div>
+    )
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {profile.full_name || 'Admin'}</p>
-        </div>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">
-              Registered employees
-            </p>
-          </CardContent>
-        </Card>
+      <ConnectionStatusCard />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Today</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeEmployees}</div>
-            <p className="text-xs text-muted-foreground">
-              Employees logged time today
-            </p>
-          </CardContent>
-        </Card>
+      {isConnected ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.activeEmployees} active employees
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(stats.totalTimeTracked / 3600).toFixed(1)}h</div>
-            <p className="text-xs text-muted-foreground">
-              Total time tracked
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Hours (7d)</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalHours.toFixed(1)}h</div>
+                <p className="text-xs text-muted-foreground">
+                  Avg. {stats.averageHours.toFixed(1)}h per employee
+                </p>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Tasks</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingTasks}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.overdueTasks} overdue tasks
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">Operational</div>
+                <p className="text-xs text-muted-foreground">
+                  All systems running normally
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest system events and user actions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {stats.recentActivity.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">No recent activity</div>
+              ) : (
+                <div className="space-y-4">
+                  {stats.recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{activity.type}</p>
+                        <p className="text-sm text-gray-500">{activity.description}</p>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {format(new Date(activity.timestamp), "MMM d, h:mm a")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      ) : (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Hours/Day</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.averageHoursPerDay.toFixed(1)}h</div>
-            <p className="text-xs text-muted-foreground">
-              Per employee
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
+            <h3 className="text-lg font-medium mb-2">Connection Required</h3>
+            <p className="text-muted-foreground mb-4">
+              Please connect to the monitoring service to view dashboard statistics.
             </p>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   )
 } 
