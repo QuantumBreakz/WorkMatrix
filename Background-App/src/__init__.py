@@ -1,5 +1,5 @@
 """
-WorkMatrix Background Application
+WorkMatrix Background Service
 """
 
 __version__ = "1.0.0" 
