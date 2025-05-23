@@ -1,0 +1,25 @@
+[Unit]
+Description=WorkMatrix Background Service
+After=network.target
+
+[Service]
+Type=simple
+User=workmatrix
+Group=workmatrix
+WorkingDirectory=/opt/workmatrix
+ExecStart=/usr/local/bin/workmatrix-service
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/workmatrix/service.log
+StandardError=append:/var/log/workmatrix/service.err
+Environment=PYTHONUNBUFFERED=1
+
+# Security settings
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=yes
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target 

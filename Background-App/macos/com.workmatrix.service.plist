@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.workmatrix.service</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/workmatrix-service</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/Library/Logs/WorkMatrix/service.err</string>
+    <key>StandardOutPath</key>
+    <string>/Library/Logs/WorkMatrix/service.out</string>
+    <key>WorkingDirectory</key>
+    <string>/Library/Application Support/WorkMatrix</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>ProcessType</key>
+    <string>Interactive</string>
+    <key>SessionCreate</key>
+    <true/>
+    <key>LaunchOnlyOnce</key>
+    <false/>
+</dict>
+</plist> 

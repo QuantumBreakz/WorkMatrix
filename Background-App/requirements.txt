@@ -1,0 +1,54 @@
+# Core dependencies
+aiohttp==3.9.1
+Pillow==10.1.0
+pygetwindow==0.0.9
+keyboard==0.13.5
+mouse==0.7.1
+psutil==5.9.6
+
+# Database and storage
+supabase==2.3.0
+aiosqlite==0.19.0
+backoff==2.2.1
+
+# Logging and monitoring
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.23.2
+pytest-cov==4.1.0
+
+# Building (Windows only)
+pyinstaller==6.3.0
+pywin32==306; sys_platform == "win32"
+
+# File operations
+aiofiles==23.2.1
+
+# Type hints
+typing-extensions==4.9.0
+
+# Supabase and Database drivers
+python-dotenv==1.0.1
+asyncpg==0.29.0
+
+# System monitoring & GUI automation
+pyautogui==0.9.54
+opencv-python==4.9.0.80
+numpy==1.26.4
+
+# Task scheduling
+schedule==1.2.1
+
+# Screenshot and recording
+mss==9.0.1
+pynput==1.7.6
+
+# HTTP & WebSockets
+requests==2.31.0
+websockets==12.0
+
+# Utilities
+python-dateutil==2.8.2
+loguru==0.7.2

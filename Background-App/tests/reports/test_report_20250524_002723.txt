@@ -1,0 +1,381 @@
+test_check_idle_state (test_activity_collector.TestActivityCollector.test_check_idle_state)
+Test idle state detection. ... ok
+test_cleanup_old_activity (test_activity_collector.TestActivityCollector.test_cleanup_old_activity)
+Test cleanup of old activity logs. ... ok
+test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Test activity collection. ... FAIL
+test_get_active_window_info (test_activity_collector.TestActivityCollector.test_get_active_window_info)
+Test getting active window information. ... ok
+test_get_activity_summary (test_activity_collector.TestActivityCollector.test_get_activity_summary)
+Test activity summary generation. ... ok
+test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Test collecting app usage data. ... FAIL
+test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Test error handling in app usage collection. ... ERROR
+test_flush (test_app_usage_collector.TestAppUsageCollector.test_flush)
+Test flushing remaining app usage data. ... ok
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux. ... FAIL
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS. ... ERROR
+test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Test getting active window on Windows. ... ok
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture. ... ERROR
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations. ... ERROR
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection. ... FAIL
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings. ... ERROR
+test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Test that recording is blocked when terminal is active. ... ok
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Test screenshot capture functionality. ... FAIL
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+Test cleanup of old screenshots. ... ok
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+Test error handling in screenshot operations. ... ERROR
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots)
+Test getting recent screenshots. ... ok
+
+======================================================================
+ERROR: test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Test error handling in app usage collection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 127, in test_error_handling
+    result = self.collector.collect()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\app_usage_collector.py", line 83, in collect
+    window_info = self.get_active_window()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Test error
+
+======================================================================
+ERROR: test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'src.collectors.app_usage_collector' from 'D:\\Surveillance-Application\\surveillance-Application-main\\Background-App\\src\\collectors\\app_usage_collector.py'> does not have the attribute 'NSWorkspace'
+
+======================================================================
+ERROR: test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 62, in test_capture_recording
+    result = self.collector.capture_recording(duration=1)  # 1 second for testing
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 55, in capture_recording
+    file_size = os.path.getsize(file_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [WinError 2] The system cannot find the file specified: 'tests\\data\\recordings\\182437ee-c488-4860-be9f-e2f2de7efce6.mp4'
+
+======================================================================
+ERROR: test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 100, in test_error_handling
+    result = self.collector.capture_recording()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 47, in capture_recording
+    out = cv2.VideoWriter(file_path, fourcc, 20.0, (screen.width, screen.height))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Video writer error
+
+======================================================================
+ERROR: test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 120, in test_recording_cleanup
+    with patch.object(self.collector.sqlite_db, 'cleanup_old_media') as mock_cleanup:
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <src.utils.sqlite_manager.SQLiteManager object at 0x000001EDF7B01C10> does not have the attribute 'cleanup_old_media'
+
+======================================================================
+ERROR: test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+Test error handling in screenshot operations.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 122, in test_error_handling
+    collector = ScreenshotCollector(self.user_id)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\screenshot_collector.py", line 27, in __init__
+    self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+PermissionError
+
+======================================================================
+FAIL: test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Test activity collection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_activity_collector.py", line 75, in test_collect_activity
+    self.assertIsNotNone(activity)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Test collecting app usage data.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 81, in test_collect_app_usage
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 64, in test_get_active_window_linux
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_002503.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_002503.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+======================================================================
+FAIL: test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertTrue(is_terminal_active())
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Test screenshot capture functionality.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 54, in test_capture_screenshot
+    self.assertTrue(Path(result["filepath"]).exists())
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 20 tests in 5.768s
+
+FAILED (failures=5, errors=6)
+
+==================================================
+Test Summary
+==================================================
+Total Tests: 20
+Failures: 5
+Errors: 6
+Skipped: 0
+
+Failures:
+
+test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_activity_collector.py", line 75, in test_collect_activity
+    self.assertIsNotNone(activity)
+AssertionError: unexpectedly None
+
+
+test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 81, in test_collect_app_usage
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 64, in test_get_active_window_linux
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_002503.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_002503.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertTrue(is_terminal_active())
+AssertionError: False is not true
+
+
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 54, in test_capture_screenshot
+    self.assertTrue(Path(result["filepath"]).exists())
+AssertionError: False is not true
+
+
+Errors:
+
+test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 127, in test_error_handling
+    result = self.collector.collect()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\app_usage_collector.py", line 83, in collect
+    window_info = self.get_active_window()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Test error
+
+
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'src.collectors.app_usage_collector' from 'D:\\Surveillance-Application\\surveillance-Application-main\\Background-App\\src\\collectors\\app_usage_collector.py'> does not have the attribute 'NSWorkspace'
+
+
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 62, in test_capture_recording
+    result = self.collector.capture_recording(duration=1)  # 1 second for testing
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 55, in capture_recording
+    file_size = os.path.getsize(file_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [WinError 2] The system cannot find the file specified: 'tests\\data\\recordings\\182437ee-c488-4860-be9f-e2f2de7efce6.mp4'
+
+
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 100, in test_error_handling
+    result = self.collector.capture_recording()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 47, in capture_recording
+    out = cv2.VideoWriter(file_path, fourcc, 20.0, (screen.width, screen.height))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Video writer error
+
+
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 120, in test_recording_cleanup
+    with patch.object(self.collector.sqlite_db, 'cleanup_old_media') as mock_cleanup:
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <src.utils.sqlite_manager.SQLiteManager object at 0x000001EDF7B01C10> does not have the attribute 'cleanup_old_media'
+
+
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 122, in test_error_handling
+    collector = ScreenshotCollector(self.user_id)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\screenshot_collector.py", line 27, in __init__
+    self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+  File "C:\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+PermissionError
+

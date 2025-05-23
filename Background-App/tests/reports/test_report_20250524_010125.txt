@@ -1,0 +1,135 @@
+test_check_idle_state (test_activity_collector.TestActivityCollector.test_check_idle_state)
+Test idle state detection. ... ok
+test_cleanup_old_activity (test_activity_collector.TestActivityCollector.test_cleanup_old_activity)
+Test cleanup of old activity logs. ... ok
+test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Test activity collection. ... ok
+test_get_active_window_info (test_activity_collector.TestActivityCollector.test_get_active_window_info)
+Test getting active window information. ... ok
+test_get_activity_summary (test_activity_collector.TestActivityCollector.test_get_activity_summary)
+Test activity summary generation. ... ok
+test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Test collecting app usage data. ... ok
+test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Test error handling in app usage collection. ... ok
+test_flush (test_app_usage_collector.TestAppUsageCollector.test_flush)
+Test flushing remaining app usage data. ... ok
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux. ... ok
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS. ... ok
+test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Test getting active window on Windows. ... ok
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture. ... ERROR
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations. ... ok
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection. ... FAIL
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup) ... FAIL
+test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Test that recording is blocked when terminal is active. ... ok
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot) ... ok
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots) ... ok
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling) ... ok
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots) ... ok
+
+======================================================================
+ERROR: test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 59, in test_capture_recording
+    result = self.collector.capture_recording()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 64, in capture_recording
+    file_size = os.path.getsize(file_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [WinError 2] The system cannot find the file specified: 'data/recordings\\9496f72f-3a69-4f89-8814-1811db365437.mp4'
+
+======================================================================
+FAIL: test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 101, in test_recording_cleanup
+    mock_cleanup.assert_called_once_with("recordings", expected_dir, 7)
+  File "C:\Python312\Lib\unittest\mock.py", line 956, in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 944, in assert_called_with
+    raise AssertionError(_error_message()) from cause
+AssertionError: expected call not found.
+Expected: mock('recordings', 'data\\recordings', 7)
+  Actual: mock('recordings', 'data/recordings', 7)
+
+----------------------------------------------------------------------
+Ran 20 tests in 16.551s
+
+FAILED (failures=2, errors=1)
+
+==================================================
+Test Summary
+==================================================
+Total Tests: 20
+Failures: 2
+Errors: 1
+Skipped: 0
+
+Failures:
+
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 101, in test_recording_cleanup
+    mock_cleanup.assert_called_once_with("recordings", expected_dir, 7)
+  File "C:\Python312\Lib\unittest\mock.py", line 956, in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 944, in assert_called_with
+    raise AssertionError(_error_message()) from cause
+AssertionError: expected call not found.
+Expected: mock('recordings', 'data\\recordings', 7)
+  Actual: mock('recordings', 'data/recordings', 7)
+
+
+Errors:
+
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 59, in test_capture_recording
+    result = self.collector.capture_recording()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 64, in capture_recording
+    file_size = os.path.getsize(file_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [WinError 2] The system cannot find the file specified: 'data/recordings\\9496f72f-3a69-4f89-8814-1811db365437.mp4'
+

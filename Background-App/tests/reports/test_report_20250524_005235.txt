@@ -1,0 +1,193 @@
+test_check_idle_state (test_activity_collector.TestActivityCollector.test_check_idle_state)
+Test idle state detection. ... ok
+test_cleanup_old_activity (test_activity_collector.TestActivityCollector.test_cleanup_old_activity)
+Test cleanup of old activity logs. ... ok
+test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Test activity collection. ... ok
+test_get_active_window_info (test_activity_collector.TestActivityCollector.test_get_active_window_info)
+Test getting active window information. ... ok
+test_get_activity_summary (test_activity_collector.TestActivityCollector.test_get_activity_summary)
+Test activity summary generation. ... ok
+test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Test collecting app usage data. ... ok
+test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Test error handling in app usage collection. ... ok
+test_flush (test_app_usage_collector.TestAppUsageCollector.test_flush)
+Test flushing remaining app usage data. ... ok
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux. ... ok
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS. ... ok
+test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Test getting active window on Windows. ... ok
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture. ... FAIL
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations. ... FAIL
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection. ... FAIL
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings. ... ERROR
+test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Test that recording is blocked when terminal is active. ... ok
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot) ... FAIL
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots) ... FAIL
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling) ... ok
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots) ... ok
+
+======================================================================
+ERROR: test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 98, in test_recording_cleanup
+    self.collector.cleanup_old_recordings(days=7)
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 94, in cleanup_old_recordings
+    self.sqlite_db.delete_old_media("recordings", self.output_dir, days)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SQLiteManager' object has no attribute 'delete_old_media'. Did you mean: 'cleanup_old_media'?
+
+======================================================================
+FAIL: test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 60, in test_capture_recording
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 78, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 73, in test_capture_screenshot
+    mock_file.assert_called_once()
+  File "C:\Python312\Lib\unittest\mock.py", line 923, in assert_called_once
+    raise AssertionError(msg)
+AssertionError: Expected 'open' to have been called once. Called 0 times.
+
+======================================================================
+FAIL: test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 106, in test_cleanup_old_screenshots
+    self.assertFalse(os.path.exists(old_file))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 20 tests in 6.306s
+
+FAILED (failures=5, errors=1)
+
+==================================================
+Test Summary
+==================================================
+Total Tests: 20
+Failures: 5
+Errors: 1
+Skipped: 0
+
+Failures:
+
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 60, in test_capture_recording
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 78, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 73, in test_capture_screenshot
+    mock_file.assert_called_once()
+  File "C:\Python312\Lib\unittest\mock.py", line 923, in assert_called_once
+    raise AssertionError(msg)
+AssertionError: Expected 'open' to have been called once. Called 0 times.
+
+
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 106, in test_cleanup_old_screenshots
+    self.assertFalse(os.path.exists(old_file))
+AssertionError: True is not false
+
+
+Errors:
+
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 98, in test_recording_cleanup
+    self.collector.cleanup_old_recordings(days=7)
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\src\collectors\recording_collector.py", line 94, in cleanup_old_recordings
+    self.sqlite_db.delete_old_media("recordings", self.output_dir, days)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SQLiteManager' object has no attribute 'delete_old_media'. Did you mean: 'cleanup_old_media'?
+

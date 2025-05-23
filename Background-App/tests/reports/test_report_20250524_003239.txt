@@ -1,0 +1,525 @@
+test_check_idle_state (test_activity_collector.TestActivityCollector.test_check_idle_state)
+Test idle state detection. ... ok
+test_cleanup_old_activity (test_activity_collector.TestActivityCollector.test_cleanup_old_activity)
+Test cleanup of old activity logs. ... ok
+test_collect_activity (test_activity_collector.TestActivityCollector.test_collect_activity)
+Test activity collection. ... ok
+test_get_active_window_info (test_activity_collector.TestActivityCollector.test_get_active_window_info)
+Test getting active window information. ... ok
+test_get_activity_summary (test_activity_collector.TestActivityCollector.test_get_activity_summary)
+Test activity summary generation. ... ok
+test_collect_app_usage (test_app_usage_collector.TestAppUsageCollector.test_collect_app_usage)
+Test collecting app usage data. ... ok
+test_error_handling (test_app_usage_collector.TestAppUsageCollector.test_error_handling)
+Test error handling in app usage collection. ... ok
+test_flush (test_app_usage_collector.TestAppUsageCollector.test_flush)
+Test flushing remaining app usage data. ... ok
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux. ... FAIL
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS. ... ERROR
+test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Test getting active window on Windows. ... FAIL
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture. ... FAIL
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture. ... ERROR
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations. ... FAIL
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations. ... ERROR
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection. ... FAIL
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection. ... ERROR
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings. ... ERROR
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings. ... ERROR
+test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Test that recording is blocked when terminal is active. ... ERROR
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot) ... FAIL
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot) ... ERROR
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots) ... ERROR
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots) ... ERROR
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling) ... FAIL
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling) ... ERROR
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots) ... FAIL
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots) ... ERROR
+
+======================================================================
+ERROR: test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Test getting active window on macOS.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'src.collectors.app_usage_collector' from 'D:\\Surveillance-Application\\surveillance-Application-main\\Background-App\\src\\collectors\\app_usage_collector.py'> does not have the attribute 'NSWorkspace'
+
+======================================================================
+ERROR: test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+======================================================================
+ERROR: test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+======================================================================
+ERROR: test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+======================================================================
+ERROR: test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <class 'src.utils.database.LocalDatabase'> does not have the attribute 'delete_old_media'
+
+======================================================================
+ERROR: test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Test cleanup of old recordings.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+======================================================================
+ERROR: test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Test that recording is blocked when terminal is active.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+======================================================================
+ERROR: test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+======================================================================
+ERROR: test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <class 'src.utils.database.LocalDatabase'> does not have the attribute 'delete_old_media'
+
+======================================================================
+ERROR: test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+======================================================================
+ERROR: test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+======================================================================
+ERROR: test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+======================================================================
+FAIL: test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Test getting active window on Linux.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 63, in test_get_active_window_linux
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_003014.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_003014.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+======================================================================
+FAIL: test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Test getting active window on Windows.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 33, in test_get_active_window_windows
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_003014.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_003014.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+======================================================================
+FAIL: test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Test screen recording capture.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 60, in test_capture_recording
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Test error handling in recording operations.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 78, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Test terminal activity detection.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 55, in test_capture_screenshot
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 105, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 125, in test_get_recent_screenshots
+    self.assertEqual(len(recent), 3)
+AssertionError: 0 != 3
+
+----------------------------------------------------------------------
+Ran 20 tests in 6.224s
+
+FAILED (failures=8, errors=12)
+
+==================================================
+Test Summary
+==================================================
+Total Tests: 20
+Failures: 8
+Errors: 12
+Skipped: 0
+
+Failures:
+
+test_get_active_window_linux (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_linux)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 63, in test_get_active_window_linux
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_003014.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_003014.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+
+test_get_active_window_windows (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_windows)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_app_usage_collector.py", line 33, in test_get_active_window_windows
+    self.assertEqual(window_info["window_title"], "Test Window")
+AssertionError: 'test_report_20250524_003014.txt - surveillance-Application-main - Cursor' != 'Test Window'
+- test_report_20250524_003014.txt - surveillance-Application-main - Cursor
++ Test Window
+
+
+
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 60, in test_capture_recording
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 78, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 34, in test_is_terminal_active
+    self.assertFalse(is_terminal_active())
+AssertionError: True is not false
+
+
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 55, in test_capture_screenshot
+    self.assertIsNotNone(result)
+AssertionError: unexpectedly None
+
+
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1390, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 105, in test_error_handling
+    with self.assertRaises(Exception) as context:
+AssertionError: Exception not raised
+
+
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 125, in test_get_recent_screenshots
+    self.assertEqual(len(recent), 3)
+AssertionError: 0 != 3
+
+
+Errors:
+
+test_get_active_window_macos (test_app_usage_collector.TestAppUsageCollector.test_get_active_window_macos)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'src.collectors.app_usage_collector' from 'D:\\Surveillance-Application\\surveillance-Application-main\\Background-App\\src\\collectors\\app_usage_collector.py'> does not have the attribute 'NSWorkspace'
+
+
+test_capture_recording (test_recording_collector.TestRecordingCollector.test_capture_recording)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+
+test_error_handling (test_recording_collector.TestRecordingCollector.test_error_handling)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+
+test_is_terminal_active (test_recording_collector.TestRecordingCollector.test_is_terminal_active)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <class 'src.utils.database.LocalDatabase'> does not have the attribute 'delete_old_media'
+
+
+test_recording_cleanup (test_recording_collector.TestRecordingCollector.test_recording_cleanup)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+
+test_terminal_blocking (test_recording_collector.TestRecordingCollector.test_terminal_blocking)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_recording_collector.py", line 19, in tearDown
+    self.collector.close()
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecordingCollector' object has no attribute 'close'
+
+
+test_capture_screenshot (test_screenshot_collector.TestScreenshotCollector.test_capture_screenshot)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+Traceback (most recent call last):
+  File "C:\Python312\Lib\unittest\mock.py", line 1387, in patched
+    with self.decoration_helper(patched,
+  File "C:\Python312\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1369, in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\contextlib.py", line 526, in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\unittest\mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <class 'src.utils.database.LocalDatabase'> does not have the attribute 'delete_old_media'
+
+
+test_cleanup_old_screenshots (test_screenshot_collector.TestScreenshotCollector.test_cleanup_old_screenshots)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+
+test_error_handling (test_screenshot_collector.TestScreenshotCollector.test_error_handling)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+
+
+test_get_recent_screenshots (test_screenshot_collector.TestScreenshotCollector.test_get_recent_screenshots)
+Traceback (most recent call last):
+  File "D:\Surveillance-Application\surveillance-Application-main\Background-App\tests\collectors\test_screenshot_collector.py", line 20, in tearDown
+    os.remove(os.path.join(self.test_dir, file))
+PermissionError: [WinError 5] Access is denied: 'data\\screenshots\\test_user'
+

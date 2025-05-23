@@ -1,0 +1,31 @@
+# Python virtual environment
+venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local data and logs
+data/logs/
+data/workmatrix.db
+data/screenshots/
+data/recordings/
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test and coverage
+.coverage
+htmlcov/
+*.egg-info/ 
