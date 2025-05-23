@@ -1,6 +1,6 @@
-# WorkMatrix Front-End
+# WorkMatrix Frontend
 
-The front-end application for WorkMatrix, built with Next.js 13 and Supabase.
+This folder contains the frontend (written in Next.js) for WorkMatrix. It connects to the backend (Background-App) via WebSocket and REST API endpoints and uses Supabase for real-time updates and authentication.
 
 ## Tech Stack
 
@@ -40,46 +40,59 @@ src/
 └── supabase/           # Supabase configurations
 ```
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Node.js (v 18 or higher) and pnpm (or npm) installed.
+- (Optional) A running instance of the backend (Background-App) (see [Background-App/README.md](../Background-App/README.md) for local deployment).
 
-- Node.js 18.x or higher
-- pnpm (recommended) or npm
-- Supabase project
+## Deployment (Local)
 
-### Development Setup
+### Running the Frontend
 
-1. Install dependencies:
-```bash
-pnpm install
-```
+1. Open a terminal and navigate to the Front-End folder (e.g. `cd /path/to/surveillance-Application-main/Front-End`).
+2. Install dependencies (using pnpm or npm):
+   ```sh
+   pnpm install
+   # (or npm install)
+   ```
+3. Start the development server:
+   ```sh
+   pnpm dev
+   # (or npm run dev)
+   ```
+   This will start the Next.js server (usually on http://localhost:3000).
 
-2. Set up environment variables:
-```bash
-cp .env.example .env.local
-```
+### Connecting to the Backend
 
-Required environment variables:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+- The frontend connects to the backend (Background-App) via a custom WebSocket service (using `useWebSocket` in `websocket-service`) and REST API endpoints.
+- Ensure that the backend is running (using the "clickable" scripts in `Background-App/scripts/` (see [Background-App/scripts/README.md](../Background-App/scripts/README.md) for details)).
+- (Optional) If you run the backend locally, update your environment variables (e.g. in a `.env.local` file) so that the frontend points to the correct backend URL (e.g. `NEXT_PUBLIC_BACKEND_URL=http://localhost:5000`).
 
-3. Run the development server:
-```bash
-pnpm dev
-```
+### Supabase Integration
 
-4. Open [http://localhost:3000](http://localhost:3000)
+- The frontend uses Supabase for real-time updates (via Realtime subscriptions) and authentication.
+- (Refer to the Supabase integration documentation (e.g. in `Front-End/supabase-integration.js`) for further details.)
 
-### Building for Production
+## How Everything Is Tied Together
 
-```bash
-pnpm build
-pnpm start
-```
+- **Backend (Background-App):**
+  - The backend (Background-App) (see [Background-App/README.md](../Background-App/README.md)) is responsible for collecting (screenshots, activity, etc.) and synchronizing data (via Supabase) and exposing a WebSocket server and REST API endpoints.
+  - (See [Background-App/scripts/README.md](../Background-App/scripts/README.md) for details on the "clickable" scripts (macOS, Linux, Windows) to run the backend locally.)
+
+- **Frontend (Front-End):**
+  - The frontend (written in Next.js) connects to the backend via a custom WebSocket service (using `useWebSocket` in `websocket-service`) and REST API endpoints.
+  - It also uses Supabase for real-time updates (via Realtime subscriptions) and authentication.
+  - (Refer to the Front-End README (this file) for further details.)
+
+## Troubleshooting
+
+- **Build Errors:** Clear the `.next` directory, remove `node_modules` (and reinstall), and check TypeScript errors.
+- **Runtime Errors:** Check your environment variables (e.g. in a `.env.local` file), verify your Supabase connection, and check the console (or logs) for errors.
+- **Backend Connection:** Ensure that the backend (Background-App) is running (using the "clickable" scripts) and that your frontend environment variables (e.g. `NEXT_PUBLIC_BACKEND_URL`) are set correctly.
+
+## Further Documentation
+
+- For details on the backend (Background-App) and its "clickable" scripts, see [Background-App/README.md](../Background-App/README.md) and [Background-App/scripts/README.md](../Background-App/scripts/README.md).
 
 ## Features
 
@@ -204,20 +217,6 @@ pnpm deploy
 ### Continuous Integration
 
 We use GitHub Actions for CI/CD. Workflows are defined in `.github/workflows/`.
-
-## Troubleshooting
-
-Common issues and solutions:
-
-1. **Build Errors**
-   - Clear `.next` directory
-   - Remove `node_modules` and reinstall
-   - Check TypeScript errors
-
-2. **Runtime Errors**
-   - Check environment variables
-   - Verify Supabase connection
-   - Check console for errors
 
 ## Contributing
 

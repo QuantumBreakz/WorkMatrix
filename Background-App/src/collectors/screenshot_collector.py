@@ -148,7 +148,7 @@ class ScreenshotCollector:
                 else:
                     # Capture primary monitor
                     monitor = sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
-                    screenshot = sct.grab(monitor)
+                screenshot = sct.grab(monitor)
                     img_data = mss.tools.to_png(screenshot.rgb, screenshot.size)
                     if self.settings.compression:
                         img_data = self._compress_image(img_data)
@@ -169,26 +169,26 @@ class ScreenshotCollector:
                     with open(monitor_filepath, 'wb') as f:
                         f.write(screenshot["data"])
 
-                    # Create screenshot data
-                    screenshot_data = {
-                        "user_id": self.user_id,
+            # Create screenshot data
+            screenshot_data = {
+                "user_id": self.user_id,
                         "filename": monitor_filename,
                         "filepath": str(monitor_filepath),
-                        "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now().isoformat(),
                         "monitor": screenshot["monitor"],
                         "size": screenshot["size"],
                         "app_name": app_name,
                         "window_title": window_title,
                         "compressed": self.settings.compression,
                         "quality": self.settings.quality
-                    }
+            }
 
-                    # Store in local database
+            # Store in local database
                     self.db.insert_screenshot(self.user_id, str(monitor_filepath))
                     
                     # Emit event
                     self.event_manager.emit("screenshot_captured", screenshot_data)
-
+            
             # Update last screenshot time and reset failed attempts
             self.last_screenshot_time = current_time
             self.failed_attempts = 0
@@ -217,8 +217,8 @@ class ScreenshotCollector:
             for file in sorted(self.screenshot_dir.glob("*.jpg"), reverse=True)[:limit]:
                 try:
                     with Image.open(file) as img:
-                        screenshots.append({
-                            "filename": file.name,
+                screenshots.append({
+                    "filename": file.name,
                             "path": str(file),
                             "size": file.stat().st_size,
                             "dimensions": img.size,

@@ -39,9 +39,9 @@ class AppUsageCollector:
     def get_active_window(self) -> Dict[str, str]:
         """Get information about the currently active window."""
         try:
-            system = platform.system()
+        system = platform.system()
             
-            if system == "Windows":
+        if system == "Windows":
                 return self._get_active_window_windows()
             elif system == "Darwin":  # macOS
                 return self._get_active_window_macos()
@@ -57,21 +57,21 @@ class AppUsageCollector:
 
     def _get_active_window_windows(self) -> Dict[str, str]:
         """Get active window info on Windows."""
-        try:
-            hwnd = win32gui.GetForegroundWindow()
+            try:
+                hwnd = win32gui.GetForegroundWindow()
             window_title = win32gui.GetWindowText(hwnd)
             _, process_id = win32process.GetWindowThreadProcessId(hwnd)
             if process_id <= 0:
                 return {"app_name": "unknown", "window_title": "unknown"}
             process = psutil.Process(process_id)
-            app_name = process.name()
+                app_name = process.name()
             return {
                 "app_name": app_name,
                 "window_title": window_title,
                 "cpu_usage": process.cpu_percent(),
                 "memory_usage": process.memory_info().rss
             }
-        except Exception as e:
+            except Exception as e:
             self.logger.error(f"Error getting Windows window info: {str(e)}")
             return {"app_name": "unknown", "window_title": "unknown"}
 
@@ -96,7 +96,7 @@ class AppUsageCollector:
                 "cpu_usage": 0,  # macOS doesn't provide easy CPU usage
                 "memory_usage": 0  # macOS doesn't provide easy memory usage
             }
-        except Exception as e:
+            except Exception as e:
             self.logger.error(f"Error getting macOS window info: {str(e)}")
             return {"app_name": "unknown", "window_title": "unknown"}
 
