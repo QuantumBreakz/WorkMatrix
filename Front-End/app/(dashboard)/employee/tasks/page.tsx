@@ -21,7 +21,7 @@ export default function TasksPage() {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
-          .eq('assignee_id', user.id)
+          .eq('assigned_to', user.id)
           .order('due_date', { ascending: true })
 
         if (error) throw error

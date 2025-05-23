@@ -52,12 +52,12 @@ src/
 1. Open a terminal and navigate to the Front-End folder (e.g. `cd /path/to/surveillance-Application-main/Front-End`).
 2. Install dependencies (using pnpm or npm):
    ```sh
-   pnpm install
+pnpm install
    # (or npm install)
    ```
 3. Start the development server:
    ```sh
-   pnpm dev
+pnpm dev
    # (or npm run dev)
    ```
    This will start the Next.js server (usually on http://localhost:3000).

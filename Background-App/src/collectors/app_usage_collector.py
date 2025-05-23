@@ -102,7 +102,7 @@ class AppUsageCollector:
 
     def _get_active_window_linux(self) -> Dict[str, str]:
         """Get active window info on Linux."""
-        try:
+            try:
             # Get active window ID
             window_id = subprocess.check_output(['xdotool', 'getactivewindow']).decode().strip()
             if not window_id:
@@ -126,14 +126,14 @@ class AppUsageCollector:
                 "cpu_usage": process.cpu_percent(),
                 "memory_usage": process.memory_info().rss
             }
-        except Exception as e:
+            except Exception as e:
             self.logger.error(f"Error getting Linux window info: {str(e)}")
             return {"app_name": "unknown", "window_title": "unknown"}
 
     def collect(self) -> Dict[str, str]:
         """Collect app usage data."""
         try:
-            window_info = self.get_active_window()
+        window_info = self.get_active_window()
             current_time = time.time()
             
             if (self.current_app != window_info["app_name"] or 

@@ -31,7 +31,7 @@ export function TaskList({ limit, showViewAll = false }: TaskListProps) {
         let query = supabase
           .from('tasks')
           .select('*')
-          .eq('assignee_id', user.id)
+          .eq('assigned_to', user.id)
           .order('due_date', { ascending: true });
 
         if (limit) {

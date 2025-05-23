@@ -223,7 +223,7 @@ class ScreenshotCollector:
                             "size": file.stat().st_size,
                             "dimensions": img.size,
                             "created": datetime.fromtimestamp(file.stat().st_ctime).isoformat()
-                        })
+                })
                 except Exception as e:
                     self.logger.error(f"Error reading screenshot {file}: {str(e)}")
             return screenshots

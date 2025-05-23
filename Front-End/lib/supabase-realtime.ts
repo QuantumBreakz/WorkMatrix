@@ -18,22 +18,29 @@ export function useRealtimeSubscription(tableName: string, userId: string | null
     let subscription: { unsubscribe: () => void } | null = null;
 
     const subscribe = async () => {
-      let query = supabase.channel('realtime-' + tableName).on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
-         console.log("Received realtime change (table: " + tableName + "):", payload);
-         subscriptionCallback();
-      });
-      if (userId) {
-         query = query.eq('user_id', userId);
-      }
-      subscription = (await query.subscribe());
+      const channel = supabase.channel('realtime-' + tableName)
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: tableName,
+            filter: userId ? `user_id=eq.${userId}` : undefined 
+          }, 
+          (payload) => {
+            console.log("Received realtime change (table: " + tableName + "):", payload);
+            subscriptionCallback();
+          }
+        );
+      
+      subscription = await channel.subscribe();
     };
 
     subscribe();
 
     return () => {
-       if (subscription) {
-          subscription.unsubscribe();
-       }
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, [tableName, userId, subscriptionCallback]);
 } 
