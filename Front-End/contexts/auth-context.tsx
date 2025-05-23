@@ -19,6 +19,7 @@ type AuthContextType = {
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
   requestAdminAccess: () => Promise<void>
+  refreshSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -77,36 +78,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [handleAuthError])
 
   useEffect(() => {
-    const fetchSession = async () => {
+    let mounted = true
+    const initializeAuth = async () => {
       try {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
-
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession()
         if (sessionError) throw sessionError
 
-        setSession(session)
-        setUser(session?.user ?? null)
+        if (mounted) {
+          setSession(initialSession)
+          setUser(initialSession?.user ?? null)
 
-        if (session?.user) {
-          const role = await fetchUserRole(session.user.id)
-          // Redirect to appropriate dashboard if on a protected route
-          const currentPath = window.location.pathname
-          if (currentPath === '/dashboard' || currentPath === '/') {
-            router.push(getDashboardPath(role))
+          if (initialSession?.user) {
+            const role = await fetchUserRole(initialSession.user.id)
+            const currentPath = window.location.pathname
+            if (currentPath === '/dashboard' || currentPath === '/') {
+              router.push(getDashboardPath(role))
+            }
           }
         }
 
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-          setSession(session)
-          setUser(session?.user ?? null)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+          if (!mounted) return
 
-          if (session?.user) {
-            const role = await fetchUserRole(session.user.id)
-            // Handle navigation on auth state change
+          setSession(newSession)
+          setUser(newSession?.user ?? null)
+
+          if (newSession?.user) {
+            const role = await fetchUserRole(newSession.user.id)
             if (event === 'SIGNED_IN') {
               router.push(getDashboardPath(role))
             }
@@ -118,16 +116,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         })
 
-        return () => subscription.unsubscribe()
+        return () => {
+          mounted = false
+          subscription.unsubscribe()
+        }
       } catch (error: any) {
-        console.error('Session error:', error)
+        console.error('Auth initialization error:', error)
         handleAuthError(error)
       } finally {
-        setIsLoading(false)
+        if (mounted) {
+          setIsLoading(false)
+        }
       }
     }
 
-    fetchSession()
+    initializeAuth()
   }, [fetchUserRole, handleAuthError, router])
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -139,7 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      // Role-based redirection will be handled by the auth state change listener
     } catch (error: any) {
       handleAuthError(error)
       throw error
@@ -148,7 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, fullName: string, role: UserRole) => {
     try {
-      // First, check if the email already exists
       const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
         .select("email")
@@ -161,7 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Email already in use. Please use a different email or try to log in.")
       }
 
-      // Proceed with signup
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) throw error
-      // Role-based redirection will be handled by the auth state change listener
+
     } catch (error: any) {
       handleAuthError(error)
       throw error
@@ -235,6 +235,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, handleAuthError, toast])
 
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data: { session: newSession }, error } = await supabase.auth.refreshSession()
+      if (error) throw error
+      
+      if (newSession) {
+        setSession(newSession)
+        setUser(newSession.user)
+        if (newSession.user) {
+          await fetchUserRole(newSession.user.id)
+        }
+      }
+    } catch (error: any) {
+      handleAuthError(error)
+      throw error
+    }
+  }, [fetchUserRole, handleAuthError])
+
   return (
     <AuthContext.Provider
       value={{
@@ -247,6 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithGoogle,
         signOut,
         requestAdminAccess,
+        refreshSession,
       }}
     >
       {children}

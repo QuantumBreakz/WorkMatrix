@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -9,54 +9,114 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
 }
 
-let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+// Create a singleton instance
+const supabaseInstance = createClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'sb-auth',
+      flowType: 'pkce',
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+    global: {
+      headers: {
+        'x-application-name': 'workmatrix',
+      },
+    },
+  }
+);
 
-export const supabase = (() => {
-  if (supabaseInstance) return supabaseInstance;
+// Set up error handling for auth state changes
+supabaseInstance.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED') {
+    console.log('Auth token refreshed');
+  } else if (event === 'SIGNED_OUT') {
+    console.log('User signed out');
+    // Clear any local storage or state if needed
+    localStorage.removeItem('sb-auth');
+  }
+});
 
-  supabaseInstance = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'sb-auth',
-        flowType: 'pkce',
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-      global: {
-        headers: {
-          'x-application-name': 'workmatrix',
-        },
-      },
+// Create a system status channel for monitoring
+const systemChannel = supabaseInstance.channel('system_status');
+
+// Subscribe to system events
+systemChannel
+  .on('system', { event: 'error' }, ({ payload }) => {
+    console.error('Supabase realtime error:', payload);
+  })
+  .on('presence', { event: 'sync' }, () => {
+    console.log('Supabase realtime state: connected');
+  })
+  .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+    console.log('New presence:', key, newPresences);
+  })
+  .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+    console.log('Left presence:', key, leftPresences);
+  })
+  .subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('Connected to Supabase realtime');
+    } else if (status === 'CLOSED') {
+      console.log('Disconnected from Supabase realtime');
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        systemChannel.subscribe();
+      }, 5000);
     }
-  );
+  });
 
-  // Create a system status channel
-  const systemChannel = supabaseInstance.channel('system_status');
+// Export the singleton instance
+export const supabase: SupabaseClient<Database> = supabaseInstance;
 
-  // Subscribe to system events
-  systemChannel
-    .on('system', { event: 'error' }, ({ payload }) => {
-      console.error('Supabase realtime error:', payload);
-    })
-    .on('presence', { event: 'sync' }, () => {
-      console.log('Supabase realtime state: connected');
-    })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('Connected to Supabase realtime');
-      }
-    });
+// Helper function to check if the session is valid
+export async function isSessionValid(): Promise<boolean> {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return !!session;
+  } catch (error) {
+    console.error('Error checking session:', error);
+    return false;
+  }
+}
 
-  return supabaseInstance;
-})();
+// Helper function to refresh the session
+export async function refreshSession() {
+  try {
+    const { data: { session }, error } = await supabase.auth.refreshSession();
+    if (error) throw error;
+    return session;
+  } catch (error) {
+    console.error('Error refreshing session:', error);
+    throw error;
+  }
+}
+
+// Helper function to get the current user's role
+export async function getUserRole(userId: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    if (error) throw error;
+    return data?.role || null;
+  } catch (error) {
+    console.error('Error getting user role:', error);
+    return null;
+  }
+}
 
 // Helper function to check connection
 export async function checkSupabaseConnection() {
